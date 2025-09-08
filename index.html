@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantry App</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+  <script defer src="firebase-config.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <h1>Pantry App</h1>
+  <div id="auth">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="login">Login</button>
+    <button id="signup">Sign Up</button>
+    <button id="logout" style="display:none;">Logout</button>
+  </div>
+  <div id="pantry" style="display:none;">
+    <h2>Your Pantry</h2>
+    <input type="text" id="ingredient" placeholder="Add ingredient">
+    <button id="add">Add</button>
+    <ul id="ingredients"></ul>
+  </div>
+</body>
+</html>
