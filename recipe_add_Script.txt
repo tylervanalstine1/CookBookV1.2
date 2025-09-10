@@ -1,0 +1,40 @@
+const newRecipe = {
+
+  title: "Soy Marinated Flank Steak with Cucumber Relish",
+
+  course: "Dinner",
+
+  time: "2-24 hours",
+
+  serving: 4,
+
+  img: "",
+
+  ingredients: [
+    { amount: "3/4", unit: "cup", name: "Soy Sauce" },
+    { amount: "1/4", unit: "cup", name: "Olive Oil" },
+    { amount: "1/4", unit: "cup", name: "Brown Sugar" },
+    { amount: "1", unit: "tablepoon", name: "Apple Cider Vinegar" },
+    { amount: "1", unit: "tablespoon", name: "Worcestershire Sauce" },
+    { amount: "2", unit: "teaspoons", name: "Dijon Mustard" },
+    { amount: "1/2", unit: "teaspoon", name: "Pepper" },
+    { amount: "2", unit: "teaspoons", name: "Garlic" },
+    { amount: "1 1/2", unit: "lbs", name: "Flank Steak" }
+
+  ],
+  recipe: [
+    "Combine the soy sauce, olive oil, brown sugar, apple cider vinegar, Worcestershire sauce, mustard and pepper in a resealable bag; seal and shake to combine. ",
+    "Reserve 2 tablespoons of the marinade for later use. Stir the garlic into the bag of marinade.",
+    "Add the steak and marinate for 2-24 hours in your refrigerator.",
+    "Heat an outdoor grill or stove top grill pan to medium-high. Place the steak on the grill and cook for 5-6 minutes per side, depending on the thickness of your meat and the desired level of doneness.",
+    "Remove the meat from grill and cover with foil. Let stand for 5-10 minutes and then slice thinly against the grain with a very sharp knife. Drizzle with reserved marinade, then serve."
+   ]
+};
+
+db.collection("recipes").doc("Flank_Steak_Marinade").set(newRecipe)
+  .then(() => {
+    console.log("Recipe added.");
+  })
+  .catch(error => {
+    console.error("Error adding recipe: ", error);
+  });

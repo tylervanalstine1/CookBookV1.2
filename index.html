@@ -1,10 +1,28 @@
+  <!-- Meal Plan Recipe Picker Modal -->
+  <div id="mealplan-picker-modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:2em 2em 1.5em 2em;border-radius:16px;max-width:600px;width:95vw;max-height:80vh;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,0.18);position:relative;">
+      <span id="close-mealplan-picker-modal" style="position:absolute;top:1em;right:1.2em;font-size:2em;cursor:pointer;color:#888;">&times;</span>
+      <h2 id="mealplan-picker-title" style="margin-top:0;margin-bottom:1em;font-family:'Quicksand',sans-serif;font-weight:700;">Select a Recipe</h2>
+      <div id="mealplan-picker-list" style="display:flex;flex-wrap:wrap;gap:1.2em 1.2em;justify-content:center;"></div>
+    </div>
+  </div>
+<!-- Recipe Modal -->
+  <div id="recipe-modal">
+    <div class="modal-content">
+      <span class="close-modal" id="close-recipe-modal">&times;</span>
+      <img id="recipe-modal-img" class="modal-img" src="" alt="Recipe image" style="display:none;" />
+      <div class="modal-details" id="recipe-modal-details"></div>
+    </div>
+  </div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pantry App</title>
+  <title>Cook Book</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/update.ico?alt=media&token=9157c232-0590-4be5-83da-cf47d3f8b6b2">
   <!-- Firebase CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
@@ -13,19 +31,122 @@
   <script defer src="app.js"></script>
 </head>
 <body>
-  <h1>Pantry App</h1>
-  <div id="auth">
+  <div id="auth" class="login-bg">
+  <h1 id="login-title" style="font-family:'Quicksand',sans-serif;font-weight:700;font-size:2.2em;color:#2563eb;margin-bottom:0.7em;margin-top:0.2em;letter-spacing:1px;">Cook Book</h1>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button id="login">Login</button>
     <button id="signup">Sign Up</button>
-    <button id="logout" style="display:none;">Logout</button>
   </div>
-  <div id="pantry" style="display:none;">
-    <h2>Your Pantry</h2>
-    <input type="text" id="ingredient" placeholder="Add ingredient">
-    <button id="add">Add</button>
-    <ul id="ingredients"></ul>
+  <!-- Tab Navigation -->
+  <div id="tabs" style="display:none; margin-bottom:1em;">
+  <button class="tab-btn" id="tab-liked">My Recipes</button>
+  <button class="tab-btn" id="tab-swipe">Recipe Swipe</button>
+    <button class="tab-btn" id="tab-mealplan">Meal Plan</button>
+  <button class="tab-btn" id="tab-pantry">Pantry</button>
+  <button id="logout" style="display:none;">Sign Out</button>
+  <!-- Meal Plan Tab -->
+  <div id="mealplan" class="tab-content" style="display:none;">
+    <h2>Meal Plan</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <button id="clear-mealplan" style="font-size:0.98em;padding:0.5em 1.2em;margin-left:1em;">Clear All</button>
+    </div>
+    <div id="mealplan-content">
+      <table id="mealplan-table" style="width:100%;border-collapse:collapse;text-align:center;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-radius:10px;overflow:hidden;">
+        <thead>
+          <tr style="background:#f0f0f0;">
+            <th style="width:60px;"></th>
+            <th>Sun</th>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+            <th>Sat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="height: 60px; border-bottom: 18px solid transparent;">
+            <th style="background:#f7f7fa;width:90px;">Breakfast</th>
+            <td class="meal-cell" data-day="0" data-meal="breakfast"></td>
+    <!-- End of meal plan table -->
+   
+            <td class="meal-cell" data-day="1" data-meal="breakfast"></td>
+            <td class="meal-cell" data-day="2" data-meal="breakfast"></td>
+            <td class="meal-cell" data-day="3" data-meal="breakfast"></td>
+            <td class="meal-cell" data-day="4" data-meal="breakfast"></td>
+            <td class="meal-cell" data-day="5" data-meal="breakfast"></td>
+            <td class="meal-cell" data-day="6" data-meal="breakfast"></td>
+          </tr>
+          <tr style="height: 60px; border-bottom: 18px solid transparent;">
+            <th style="background:#f7f7fa;width:90px;">Lunch</th>
+            <td class="meal-cell" data-day="0" data-meal="lunch"></td>
+            <td class="meal-cell" data-day="1" data-meal="lunch"></td>
+            <td class="meal-cell" data-day="2" data-meal="lunch"></td>
+            <td class="meal-cell" data-day="3" data-meal="lunch"></td>
+            <td class="meal-cell" data-day="4" data-meal="lunch"></td>
+            <td class="meal-cell" data-day="5" data-meal="lunch"></td>
+            <td class="meal-cell" data-day="6" data-meal="lunch"></td>
+          </tr>
+          <tr style="height: 60px;">
+            <th style="background:#f7f7fa;width:90px;">Dinner</th>
+            <td class="meal-cell" data-day="0" data-meal="dinner"></td>
+            <td class="meal-cell" data-day="1" data-meal="dinner"></td>
+            <td class="meal-cell" data-day="2" data-meal="dinner"></td>
+            <td class="meal-cell" data-day="3" data-meal="dinner"></td>
+            <td class="meal-cell" data-day="4" data-meal="dinner"></td>
+            <td class="meal-cell" data-day="5" data-meal="dinner"></td>
+            <td class="meal-cell" data-day="6" data-meal="dinner"></td>
+          </tr>
+        </tbody>
+      </table>
+       </div> <!-- end #mealplan-content -->
+
+   </div>
+   </div>
+
+   <!-- Pantry Tab -->
+   <div id="pantry" class="tab-content" style="display:none;">
+     <h2>Your Pantry</h2>
+     <div style="position:relative;">
+       <input type="text" id="ingredient" placeholder="Add ingredient" autocomplete="off">
+       <div id="autocomplete-list" class="autocomplete-items"></div>
+     </div>
+     <ul id="ingredients"></ul>
+     <!-- Modal for amount input (moved above grocery list) -->
+     <div id="amount-modal" class="modal" style="display:none;">
+       <div class="modal-content">
+         <span id="close-modal" class="close">&times;</span>
+         <p id="modal-item-name"></p>
+         <input type="number" id="amount-input" min="1" placeholder="Amount">
+         <button id="confirm-amount">Add to Pantry</button>
+       </div>
+     </div>
+     <!-- Grocery List Section (now under pantry tab) -->
+     <div id="grocery-list-section">
+       <h2>Grocery List</h2>
+       <ul id="grocery-list"></ul>
+     </div>
+   </div>
+
+  <!-- Recipe Swipe Tab -->
+  <div id="swipe" class="tab-content" style="display:none;">
+    <h2>Recipe Swipe</h2>
+    <div id="recipe-card" style="max-width:350px;margin:auto;display:none;">
+      <img id="recipe-img" src="" alt="Recipe Image" style="width:100%;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+      <h3 id="recipe-title"></h3>
+      <div style="display:flex;justify-content:space-between;margin-top:1em;">
+        <button id="dislike-btn" style="background:#eee;color:#d90429;">&#10060; Dislike</button>
+        <button id="like-btn" style="background:#d4f8e8;color:#218838;">&#10084; Like</button>
+      </div>
+    </div>
+    <div id="no-more-recipes" style="display:none;text-align:center;color:#888;">No more recipes to swipe!</div>
+  </div>
+
+  <!-- Liked Recipes Tab -->
+  <div id="liked" class="tab-content" style="display:none;">
+    <h2>My Recipes</h2>
+    <ul id="liked-list"></ul>
   </div>
 </body>
 </html>

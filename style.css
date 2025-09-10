@@ -1,3 +1,818 @@
-body { font-family: Arial, sans-serif; margin: 2em; }
+#ingredients li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+#ingredients li button {
+	background: #d90429;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.3em 0.8em;
+	margin-left: 1em;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+#ingredients li button:hover {
+	background: #a3021f;
+}
+/* Style for 'I have this' button in grocery list */
+#grocery-list li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+#grocery-list li button {
+	background: #4caf50;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.3em 0.8em;
+	margin-left: 1em;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+#grocery-list li button:hover {
+	background: #388e3c;
+}
+#amount-modal .modal-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#ingredients {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#pantry.tab-content {
+	overflow-y: auto !important;
+	max-height: 90vh;
+}
+#pantry > div[style*='position:relative'] {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 1em;
+}
+/* Meal Plan Card Styles */
+.meal-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background: #fff;
+	border-radius: 10px;
+	box-shadow: 0 2px 8px rgba(39,92,200,0.10);
+	padding: 0.4em 0.7em 0.7em 0.7em;
+	width: 90px;
+	margin: 0 auto;
+	cursor: pointer;
+	position: relative;
+	transition: box-shadow 0.18s;
+}
+.meal-card:hover {
+	box-shadow: 0 4px 16px rgba(39,92,200,0.16);
+}
+.meal-card-img {
+	width: 70px;
+	height: 48px;
+	object-fit: cover;
+	border-radius: 7px;
+	margin-bottom: 0.4em;
+}
+.meal-card-title {
+	font-size: 0.98em;
+	font-weight: 600;
+	text-align: center;
+	color: #2563eb;
+	margin-bottom: 0.1em;
+	word-break: break-word;
+}
+.meal-card .remove-meal {
+	position: absolute;
+	top: 2px;
+	right: 7px;
+	color: #888;
+	font-size: 1.2em;
+	cursor: pointer;
+	font-weight: bold;
+	background: none;
+	border: none;
+	padding: 0;
+	line-height: 1;
+	transition: color 0.15s;
+}
+.meal-card .remove-meal:hover {
+	color: #d90429;
+}
+/* Center and make meal plan table responsive */
+#mealplan-content {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-right: 10vw;
+	margin-left: 5vw;
+}
+#mealplan-table {
+	margin: 0 auto;
+	max-width: 100vw;
+	width: 100%;
+	min-width: 600px;
+	overflow-x: auto;
+}
+@media (max-width: 900px) {
+	#mealplan-table {
+		min-width: 500px;
+		font-size: 0.95em;
+	}
+}
+@media (max-width: 700px) {
+	#mealplan-table {
+		min-width: 350px;
+		font-size: 0.9em;
+	}
+}
+/* Center all main page titles */
+h2 {
+	text-align: center;
+	width: 100%;
+}
+html, body {
+	max-width: 100vw;
+	max-height: 100vh;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	box-sizing: border-box;
+}
+.login-bg {
+	background-image: url('https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/spinach-leaves-near-vegetables-mushrooms.jpg?alt=media&token=e0e4d6fe-7a42-433d-a29b-c869d9c46fec');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	min-height: 100vh;
+	width: 100vw;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+}
+#recipe-modal .section-header {
+	font-size: 1.2em;
+	font-weight: 700;
+	margin: 1.2em 0 0.5em 0;
+	letter-spacing: 0.03em;
+	color: #2563eb;
+	text-transform: uppercase;
+}
+#recipe-modal .ingredient-list {
+	list-style: none;
+	padding: 0;
+	margin: 0.5em 0 1em 0;
+}
+#recipe-modal .ingredient-list li {
+	background: #f8f8f8;
+	margin-bottom: 0.4em;
+	padding: 0.5em 1em;
+	border-radius: 6px;
+	font-size: 1em;
+	color: #333;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+#recipe-modal .stepper {
+	margin: 1em 0 0 0;
+	padding: 0;
+	list-style: none;
+}
+#recipe-modal .stepper li {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 1.1em;
+}
+#recipe-modal .step-circle {
+	min-width: 2em;
+	min-height: 2em;
+	background: #2563eb;
+	color: #fff;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 1.1em;
+	margin-right: 1em;
+	box-shadow: 0 2px 6px rgba(37,99,235,0.10);
+}
+#recipe-modal .step-text {
+	flex: 1;
+	font-size: 1em;
+	color: #222;
+}
+#recipe-modal {
+	display: none;
+	position: fixed;
+	z-index: 200;
+	left: 0;
+	top: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0,0,0,0.4);
+	align-items: center;
+	justify-content: center;
+}
+#recipe-modal .modal-content {
+	background: #fff;
+	padding: 2em 2.5em;
+	border-radius: 14px;
+	max-width: 700px;
+	min-width: 320px;
+	margin: auto;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	gap: 2em;
+	max-height: 80vh;
+	overflow: auto;
+}
+#recipe-modal .modal-img {
+	flex: 0 0 220px;
+	width: 220px;
+	height: 180px;
+	object-fit: cover;
+	border-radius: 10px;
+	margin-right: 1.5em;
+}
+#recipe-modal .modal-details {
+	flex: 1;
+	overflow-y: auto;
+	max-height: 70vh;
+}
+#recipe-modal .close-modal {
+	position: absolute;
+	top: 1em;
+	right: 1em;
+	font-size: 2em;
+	color: #888;
+	cursor: pointer;
+	z-index: 10;
+}
+/* Modern modal styling for recipe details */
+#recipe-modal {
+	display: none;
+	position: fixed;
+	z-index: 2000;
+	left: 0;
+	top: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0,0,0,0.45);
+	align-items: center;
+	justify-content: center;
+}
+#recipe-modal .modal-content {
+	background: #fff;
+	padding: 2em 2.5em;
+	border-radius: 14px;
+	max-width: 600px;
+	min-width: 320px;
+	margin: auto;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#recipe-modal .modal-img {
+	width: 320px;
+	height: 200px;
+	object-fit: cover;
+	border-radius: 10px;
+	margin-bottom: 1.2em;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+	display: block;
+}
+#recipe-modal .modal-details {
+	width: 100%;
+	overflow-y: auto;
+	max-height: 70vh;
+	font-size: 1.1em;
+}
+#recipe-modal .close-modal {
+	position: absolute;
+	top: 1em;
+	right: 1em;
+	font-size: 2em;
+	color: #888;
+	cursor: pointer;
+	z-index: 10;
+}
+/* Add left padding to all main page titles */
+.tab-content > h2 {
+	text-align: center;
+	font-family: 'Quicksand', Arial, sans-serif;
+	font-size: 2.2em;
+	font-weight: 700;
+	color: #2563eb;
+	margin: 1.2em auto 0.7em auto;
+	letter-spacing: 1.5px;
+	text-shadow: 1px 2px 10px rgba(37,99,235,0.08);
+	padding: 0;
+	width: 100%;
+	max-width: 700px;
+}
+#tabs {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5em;
+	justify-content: flex-end;
+	position: static;
+	width: 100%;
+	background: none;
+	border-radius: 0;
+	box-shadow: none;
+	padding: 1.2em 7vw 0.5em 3vw;
+	margin-bottom: 1.5em;
+}
+/* Universal button styling */
+button, .tab-btn, #login, #signup, #logout, #like-btn, #dislike-btn, #clear-mealplan, #confirm-amount {
+	font-family: 'Quicksand', Arial, sans-serif;
+	font-weight: 600;
+	border-radius: 14px;
+	border: 1.5px solid #a7c7f7;
+	background: #fff;
+	color: #2563eb;
+	padding: 0.38em 1em;
+	margin: 0.18em 0.28em;
+	box-shadow: 0 1px 4px rgba(39, 92, 200, 0.07);
+	transition: box-shadow 0.18s, background 0.18s, color 0.18s, border 0.18s;
+	cursor: pointer;
+	font-size: 0.98em;
+	outline: none;
+}
+
+button:hover, .tab-btn:hover, #login:hover, #signup:hover, #logout:hover, #like-btn:hover, #dislike-btn:hover, #clear-mealplan:hover, #confirm-amount:hover {
+	background: #f3f7fa;
+	color: #174ea6;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+}
+
+button:focus, .tab-btn:focus, #login:focus, #signup:focus, #logout:focus, #like-btn:focus, #dislike-btn:focus, #clear-mealplan:focus, #confirm-amount:focus {
+	outline: 2px solid #2563eb;
+	outline-offset: 2px;
+}
+/* Stylized heading for login */
+.login-heading {
+	font-family: 'Quicksand', Arial, sans-serif;
+	font-size: 2.4em;
+	font-weight: 700;
+	color: #111;
+	text-shadow: 2px 4px 16px rgba(255,255,255,0.18), 0 1px 0 #4983cf;
+	margin-bottom: 0.7em;
+	letter-spacing: 2px;
+	align-self: flex-end;
+}
+body {
+	font-family: 'Quicksand', Arial, sans-serif;
+	min-height: 100vh;
+	margin: 0;
+}
+
+.login-bg {
+	background-image: url('https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/high-angle-view-bruschetta-with-farfalle-raw-pasta-garlic-clove-tomato-oil-basil-leaf-against-isolated-white-background.jpg?alt=media&token=b3781108-ad54-4ef2-aa18-9a965b7de2bd');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	min-height: 100vh;
+	width: 100vw;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+}
+
+#auth {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	justify-content: flex-start;
+	min-height: 100vh;
+	width: 100vw;
+	padding-left: 55vw;
+	padding-top: 25vh;
+}
+/* Grocery List Styling */
+#grocery-list-section {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: 2em;
+}
+#grocery-list-section h2 {
+	margin-bottom: 0.7em;
+	color: #2563eb;
+	letter-spacing: 0.5px;
+}
+#grocery-list {
+	background: #fff;
+	padding: 1.2em 1.5em;
+	border-radius: 14px;
+	box-shadow: 0 2px 12px rgba(39, 92, 200, 0.08);
+	margin-top: 0.5em;
+	max-width: 420px;
+	width: 100%;
+	list-style: none;
+}
+#grocery-list li {
+	font-family: 'Quicksand', 'Arial', sans-serif;
+	font-size: 1.08em;
+	color: #333;
+	padding: 0.45em 0.2em;
+	border-bottom: 1px solid #f0f4fa;
+	display: flex;
+	align-items: center;
+}
+#grocery-list li:last-child {
+	border-bottom: none;
+}
+/* Blue style for #logout only */
+#logout {
+	font-family: 'Quicksand', 'Arial', sans-serif !important;
+	font-weight: 600;
+	border-radius: 18px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+	border: none;
+	background: linear-gradient(90deg, #e3edfa 60%, #a7c7f7 100%);
+	color: #2563eb;
+	padding: 0.7em 1.6em;
+#auth {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	justify-content: flex-start;
+	min-height: 100vh;
+	width: 100vw;
+	padding-left: 55vw;
+	padding-top: 5vh;
+}
+/* White style for tab and auth buttons */
+.tab-btn, #login, #signup {
+	font-family: 'Quicksand', 'Arial', sans-serif !important;
+	font-weight: 600;
+	border-radius: 18px;
+	box-shadow: 0 2px 8px rgba(39, 92, 200, 0.07);
+	border: 2px solid #a7c7f7;
+	background: #fff;
+	color: #2563eb;
+	padding: 0.7em 1.6em;
+	margin: 0.2em 0.4em;
+	transition: box-shadow 0.18s, background 0.18s, color 0.18s, border 0.18s;
+	cursor: pointer;
+/* Removed stray closing brace */
+.tab-btn:hover, #login:hover, #signup:hover {
+	background: #f3f7fa;
+	color: #174ea6;
+	border: 2px solid #7ba7e6;
+}
+
+/* Horizontal alignment for main nav buttons */
+
+#logout {
+	display: inline-block;
+	margin-left: auto;
+	background: #fff !important;
+	color: #2563eb !important;
+	border: 2px solid #a7c7f7 !important;
+	box-shadow: 0 2px 8px rgba(39, 92, 200, 0.07);
+	font-weight: 700;
+	transition: background 0.18s, color 0.18s, border 0.18s;
+}
+#logout:hover {
+	background: #f3f7fa !important;
+	color: #174ea6 !important;
+	border: 2px solid #7ba7e6 !important;
+}
+#recipe-modal {
+	display: none;
+	position: fixed;
+	z-index: 200;
+	left: 0;
+	top: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0,0,0,0.4);
+	align-items: center;
+	justify-content: center;
+}
+#recipe-modal .modal-content {
+	background: #fff;
+	padding: 2em 2.5em;
+	border-radius: 14px;
+	max-width: 700px;
+	min-width: 320px;
+	margin: auto;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	gap: 2em;
+	max-height: 80vh;
+	overflow: auto;
+}
+#recipe-modal .modal-img {
+	flex: 0 0 220px;
+	width: 220px;
+	height: 180px;
+	object-fit: cover;
+	border-radius: 10px;
+	margin-right: 1.5em;
+}
+#recipe-modal .modal-details {
+	flex: 1;
+	overflow-y: auto;
+	max-height: 70vh;
+}
+#recipe-modal .close-modal {
+	position: absolute;
+	top: 1em;
+	right: 1em;
+	font-size: 2em;
+	color: #888;
+	cursor: pointer;
+	z-index: 10;
+}
+/* Recipe Modal */
+#recipe-modal {
+	display: none;
+	position: fixed;
+	z-index: 200;
+	left: 0;
+	top: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0,0,0,0.4);
+	align-items: center;
+	justify-content: center;
+}
+#recipe-modal .modal-content {
+	background: #fff;
+	padding: 2em 2.5em;
+	border-radius: 14px;
+	max-width: 500px;
+	margin: auto;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+	position: relative;
+}
+#recipe-modal .close-modal {
+	position: absolute;
+	top: 1em;
+	right: 1em;
+	font-size: 2em;
+	color: #888;
+	cursor: pointer;
+}
+/* Recipe Swipe Like/Dislike Buttons */
+#like-btn, #dislike-btn {
+	font-size: 1.1em;
+	padding: 0.7em 2em;
+	border-radius: 8px;
+	margin: 0 1em;
+	min-width: 100px;
+	min-height: 50px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+/* Liked Recipes List Styling */
+#liked-list li {
+	background: #fff;
+	margin: 1.2em 0;
+	padding: 2em 2em;
+	border-radius: 14px;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+	display: flex;
+	align-items: center;
+	font-size: 1.3em;
+	min-height: 120px;
+	max-width: 500px;
+}
+
+#liked-list li img {
+	width: 90px !important;
+	height: 60px !important;
+	object-fit: cover;
+	border-radius: 8px;
+	margin-right: 1em;
+}
+
+#liked-list li span {
+	flex: 1;
+	display: block;
+	font-size: 1.1em;
+	margin-right: 0.5em;
+}
+
+#recipe-modal .modal-content {
+	background: #fff;
+	padding: 2em 2.5em;
+	border-radius: 14px;
+	max-width: 600px;
+	min-width: 320px;
+	margin: auto;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	max-height: 80vh;
+	overflow: auto;
+	font-family: 'Quicksand', Arial, sans-serif;
+}
+#recipe-modal .modal-img {
+	width: 320px;
+	height: 200px;
+	object-fit: cover;
+	border-radius: 10px;
+	margin-bottom: 1.2em;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+	display: block;
+}
+#recipe-modal .modal-details {
+	width: 100%;
+	overflow-y: auto;
+	max-height: 70vh;
+	font-size: 1.1em;
+}
+#recipe-modal .section-header {
+	font-size: 1.2em;
+	font-weight: 700;
+	margin: 1.2em 0 0.5em 0;
+	letter-spacing: 0.03em;
+	color: #d90429;
+	text-transform: uppercase;
+}
+#recipe-modal .ingredient-list {
+	list-style: none;
+	padding: 0;
+	margin: 0.5em 0 1em 0;
+}
+#recipe-modal .ingredient-list li {
+	background: #f8f8f8;
+	margin-bottom: 0.4em;
+	padding: 0.5em 1em;
+	border-radius: 6px;
+	font-size: 1em;
+	color: #333;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+#recipe-modal .stepper {
+	margin: 1em 0 0 0;
+	padding: 0;
+	list-style: none;
+}
+#recipe-modal .stepper li {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 1.1em;
+}
+#recipe-modal .step-circle {
+	min-width: 2em;
+	min-height: 2em;
+	background: #d90429;
+	color: #fff;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 1.1em;
+	margin-right: 1em;
+	box-shadow: 0 2px 6px rgba(217,4,41,0.10);
+}
+#recipe-modal .step-text {
+	flex: 1;
+	font-size: 1em;
+	color: #222;
+}
 #auth, #pantry { margin-bottom: 2em; }
 input, button { margin: 0.5em; }
+
+/* Pantry List Styling */
+#ingredients li {
+	background: #fff;
+	margin: 0.3em 0;
+	padding: 0.3em 0.8em;
+	border-radius: 7px;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 1em;
+	min-height: 36px;
+	max-width: 350px;
+}
+#ingredients li button {
+	background: #ff6b6b;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.3em 0.7em;
+	cursor: pointer;
+	margin-left: 1em;
+	transition: background 0.2s;
+}
+#ingredients li button:hover {
+	background: #d90429;
+}
+
+/* Autocomplete */
+.autocomplete-items {
+	position: absolute;
+	border: 1px solid #d4d4d4;
+	border-bottom: none;
+	border-top: none;
+	z-index: 99;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: #fff;
+	max-height: 180px;
+	overflow-y: auto;
+	border-radius: 0 0 8px 8px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.autocomplete-items div {
+	padding: 0.7em 1em;
+	cursor: pointer;
+	border-bottom: 1px solid #eee;
+}
+.autocomplete-items div:hover {
+	background-color: #e9e9e9;
+}
+
+/* Modal */
+.modal {
+	display: block; /* Hidden by default */
+	position: fixed;
+	z-index: 100;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0,0,0,0.3);
+}
+.modal-content {
+#login-title {
+	text-align: center;
+	font-family: 'Quicksand', 'Arial', sans-serif;
+	font-weight: 700;
+	font-size: 2.2em;
+	color: #2563eb;
+	margin-bottom: 0.7em;
+	margin-top: 0.2em;
+	letter-spacing: 1px;
+	/* 3D effect */
+	text-shadow:
+		0 2px 6px rgba(30, 64, 175, 0.18),
+		0 1px 0 #fff,
+		0 4px 12px rgba(30, 64, 175, 0.18),
+		1px 1px 0 #b3c6f7,
+		2px 2px 0 #b3c6f7;
+}
+	background-color: #fff;
+	margin: 10% auto;
+	padding: 2em;
+	border: 1px solid #888;
+	width: 90%;
+	max-width: 350px;
+	border-radius: 10px;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+	text-align: center;
+}
+.close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+	position: absolute;
+
+	#mealplan-table th, #mealplan-table td {
+		border: 1px solid #e0e0e0;
+		padding: 1.5em 0.5em;
+		height: 60px;
+	}
+
+	#mealplan-table tr {
+		border-bottom: 2px solid #d0d0d0;
+	}
+
+	#mealplan-table tbody tr:not(:last-child) {
+		margin-bottom: 20px;
+		border-bottom: 8px solid #f5f5f5;
+	}
+.close:focus {
+	color: #d90429;
+	text-decoration: none;
+	cursor: pointer;
+}
+}

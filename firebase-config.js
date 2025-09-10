@@ -9,6 +9,10 @@ const firebaseConfig = {
   measurementId: "G-N32QBJJ65P"
 };
 
+
+console.log('FIREBASE CONFIG:', firebaseConfig);
 firebase.initializeApp(firebaseConfig);
+console.log('FIREBASE APPS:', firebase.apps);
 const auth = firebase.auth();
 const db = firebase.firestore();
+db.collection('items').limit(1).get().then(s => console.log('FIRESTORE TEST QUERY:', s.docs.map(d => d.data()))).catch(e => console.error('FIRESTORE ERROR:', e));
