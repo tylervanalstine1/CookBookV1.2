@@ -1,7 +1,15 @@
 /* Make all main tab content pages vertically scrollable except login */
 .tab-content {
+	overflow-y: visible;
+	max-height: none;
 	overflow-y: auto;
-	max-height: 85vh;
+	max-height: calc(100vh - 120px); /* Leave space for navigation */
+}
+
+/* Login page should not scroll */
+.login-bg {
+	overflow-y: hidden;
+	max-height: 100vh;
 }
 
 #auth {
@@ -9,10 +17,69 @@
 	max-height: unset !important;
 }
 @media (max-width: 600px) {
-	.tab-content {
-		max-height: unset !important;
-		overflow-y: visible !important;
+	#pantry.tab-content {
+		overflow-y: auto !important;
+		max-height: 100vh !important;
 	}
+	#pantry.tab-content {
+		overflow-x: hidden !important;
+		overflow-y: auto !important;
+	}
+	/* Hide My Recipes and Meal Plan sections on mobile unless their tab is active */
+	#liked.tab-content:not([style*="display: block"]),
+	#liked.tab-content[style*="display: none"],
+	#mealplan.tab-content:not([style*="display: block"]),
+	#mealplan.tab-content[style*="display: none"]) {
+		display: none !important;
+	}
+		#liked.tab-content > h2 {
+			display: none !important;
+		}
+		/* Hide My Recipes and Meal Plan sections on mobile unless their tab is active */
+		#liked.tab-content[style*="display: none"],
+		#mealplan.tab-content[style*="display: none"] {
+			display: none !important;
+		}
+		#liked.tab-content {
+			overflow-y: auto !important;
+			max-height: 70vh !important;
+			height: 70vh !important;
+			display: block !important;
+		}
+			.tab-content {
+				height: auto !important;
+				max-height: none !important;
+				overflow-y: visible !important;
+				overflow-x: hidden !important;
+			}
+	/* Allow body to scroll on mobile */
+	body {
+		overflow-y: auto;
+	}
+	
+	/* Make all tab content naturally scrollable on mobile */
+	.tab-content {
+		max-height: none;
+		overflow-y: auto;
+		padding-bottom: 2em;
+		min-height: calc(100vh - 80px); /* Ensure minimum height */
+	}
+	
+	/* Fix navigation positioning with sticky header */
+	#tabs {
+		position: sticky;
+		top: 0;
+		width: 100vw;
+		z-index: 1000;
+		background: #fff;
+		border-bottom: 1px solid #e0e0e0;
+		padding: 0.5em;
+		margin-bottom: 0.5em;
+		box-sizing: border-box;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+	
+	/* Recipe Swipe specific adjustments */
 	#swipe.tab-content > h2 {
 		margin-top: 0.5em !important;
 		margin-bottom: 0.8em !important;
@@ -38,7 +105,8 @@
 	#recipe-card img {
 		width: 100%;
 		height: auto;
-		max-height: 68vw;
+		max-height: 80vw;
+		max-height: 60vw;
 		object-fit: cover;
 		border-radius: 10px;
 	}
