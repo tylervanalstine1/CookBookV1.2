@@ -1,4 +1,4 @@
-// Replace with your Firebase config
+
 const firebaseConfig = {
   apiKey: "AIzaSyCdmFRZ-YByrchTQcKMYMzz4Hi2Qmu4ZGI",
   authDomain: "cookbook-cdf05.firebaseapp.com",
@@ -8,7 +8,6 @@ const firebaseConfig = {
   appId: "1:865167617910:web:a5f46a5764c4c1643c5457",
   measurementId: "G-N32QBJJ65P"
 };
-
 
 console.log('FIREBASE CONFIG:', firebaseConfig);
 firebase.initializeApp(firebaseConfig);
