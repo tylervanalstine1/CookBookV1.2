@@ -1,17 +1,48 @@
 /* Make all main tab content pages vertically scrollable except login */
 .tab-content {
-	overflow-y: auto;
-	max-height: 85vh;
+	overflow-y: visible;
+	max-height: none;
 }
 #auth {
 	overflow-y: visible !important;
 	max-height: unset !important;
 }
 @media (max-width: 600px) {
-	.tab-content {
-		max-height: unset !important;
-		overflow-y: visible !important;
+	#pantry.tab-content {
+		overflow-y: auto !important;
+		max-height: 100vh !important;
 	}
+	#pantry.tab-content {
+		overflow-x: hidden !important;
+		overflow-y: auto !important;
+	}
+	/* Hide My Recipes and Meal Plan sections on mobile unless their tab is active */
+	#liked.tab-content:not([style*="display: block"]),
+	#liked.tab-content[style*="display: none"],
+	#mealplan.tab-content:not([style*="display: block"]),
+	#mealplan.tab-content[style*="display: none"]) {
+		display: none !important;
+	}
+		#liked.tab-content > h2 {
+			display: none !important;
+		}
+		/* Hide My Recipes and Meal Plan sections on mobile unless their tab is active */
+		#liked.tab-content[style*="display: none"],
+		#mealplan.tab-content[style*="display: none"] {
+			display: none !important;
+		}
+		#liked.tab-content {
+			overflow-y: auto !important;
+			max-height: 70vh !important;
+			height: 70vh !important;
+			display: block !important;
+		}
+			.tab-content {
+				height: auto !important;
+				max-height: none !important;
+				overflow-y: visible !important;
+				overflow-x: hidden !important;
+			}
 	#swipe.tab-content > h2 {
 		margin-top: -1.9em !important;
 		margin-bottom: 0.1em !important;
@@ -44,7 +75,7 @@
 	#recipe-card img {
 		width: 100%;
 		height: auto;
-		max-height: 68vw;
+		max-height: 80vw;
 		object-fit: cover;
 		border-radius: 10px;
 	}
@@ -151,7 +182,7 @@
 	align-items: center;
 }
 #pantry.tab-content {
-	overflow-y: auto !important;
+	overflow-y: scroll !important;
 	max-height: 90vh;
 }
 #pantry > div[style*='position:relative'] {
