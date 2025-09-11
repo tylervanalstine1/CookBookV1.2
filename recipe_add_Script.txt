@@ -1,37 +1,45 @@
 const newRecipe = {
 
-  title: "Soy Marinated Flank Steak with Cucumber Relish",
+  title: "Stuffed French Toast",
 
-  course: "Dinner",
+  course: "Breakfast",
 
-  time: "2-24 hours",
+  time: "30 minutes",
 
   serving: 4,
 
-  img: "",
+  img: "https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/cream-cheese-stuffed-french-toast-2.jpg?alt=media&token=4b20d644-df3a-4264-9ee2-f9a86c7e80c9",
 
   ingredients: [
-    { amount: "3/4", unit: "cup", name: "Soy Sauce" },
-    { amount: "1/4", unit: "cup", name: "Olive Oil" },
-    { amount: "1/4", unit: "cup", name: "Brown Sugar" },
-    { amount: "1", unit: "tablepoon", name: "Apple Cider Vinegar" },
-    { amount: "1", unit: "tablespoon", name: "Worcestershire Sauce" },
-    { amount: "2", unit: "teaspoons", name: "Dijon Mustard" },
-    { amount: "1/2", unit: "teaspoon", name: "Pepper" },
-    { amount: "2", unit: "teaspoons", name: "Garlic" },
-    { amount: "1 1/2", unit: "lbs", name: "Flank Steak" }
+    { amount: "4", unit: "whole", name: "eggs" },
+    { amount: "1", unit: "cup", name: "Milk" },
+    { amount: "1", unit: "tablespoon", name: "Sugar" },
+    { amount: "1", unit: "teaspoon", name: "Vanilla" },
+    { amount: "8", unit: "slices", name: "Brioche Bread" },
+    { amount: "2", unit: "tablespoons", name: "Butter" },
+    { amount: "8", unit: "ounces", name: "Cream Cheese" },
+    { amount: "1/2", unit: "cup", name: "Powdered Sugar" },
+    { amount: "1 1/2", unit: "cup", name: "Rasberries" },
+    { amount: "3/4", unit: "cup", name: "Almonds" },
+    { amount: "4", unit: "ounces", name: "Maple Syrup" }
+
 
   ],
   recipe: [
-    "Combine the soy sauce, olive oil, brown sugar, apple cider vinegar, Worcestershire sauce, mustard and pepper in a resealable bag; seal and shake to combine. ",
-    "Reserve 2 tablespoons of the marinade for later use. Stir the garlic into the bag of marinade.",
-    "Add the steak and marinate for 2-24 hours in your refrigerator.",
-    "Heat an outdoor grill or stove top grill pan to medium-high. Place the steak on the grill and cook for 5-6 minutes per side, depending on the thickness of your meat and the desired level of doneness.",
-    "Remove the meat from grill and cover with foil. Let stand for 5-10 minutes and then slice thinly against the grain with a very sharp knife. Drizzle with reserved marinade, then serve."
-   ]
+    "Whisk together the eggs, milk, sugar and vanilla.",
+    "Preheat a griddle to medium.",
+    "Melt 1 tablespoon of the butter on the griddle.",
+    "Soak 4 slices of bread in the batter and place on the griddle. Cook for 3-4 minutes on each side or until cooked through.",
+    "Wipe the griddle clean with a paper towel and repeat the process with the remaining tablespoon of butter and 4 slices of bread.",
+    "While the french toast is cooking, make the cream cheese filling.",
+    "Place the cream cheese in a bowl and beat with a mixer until light and fluffy. Add the powdered sugar and beat until combined.",
+    "Cut the slices of french toast in half diagonally.",
+    "On 4 plates place 1 slice of french toast. Top each slice of toast with approximately 1-2 tablespoons of the cream cheese filling, then top with 2 tablespoons of raspberries and 1 tablespoon of almonds.",
+    "Place the second piece of french toast on top of each stack. Repeat with remaining french toast.",
+    "Garnish each stack with approximately 1 tablespoon of chopped almonds, 2 tablespoons of raspberries and remaining cream cheese filling. Top with mint sprigs if using. Serve with maple syrup."
 };
 
-db.collection("recipes").doc("Flank_Steak_Marinade").set(newRecipe)
+db.collection("recipes").doc("Stuffed_French_Toast").set(newRecipe)
   .then(() => {
     console.log("Recipe added.");
   })

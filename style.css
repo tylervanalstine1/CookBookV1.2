@@ -1,3 +1,18 @@
+@media (max-width: 600px) {
+	#mealplan-table-mobile th:first-child {
+		writing-mode: vertical-rl;
+		text-orientation: mixed;
+		white-space: nowrap;
+		font-size: 1em;
+		letter-spacing: 0.1em;
+		padding: 0.2em 0.1em;
+		height: 90px;
+		min-width: 30px;
+		max-width: 30px;
+		background: #f0f4fa;
+		border-right: 1px solid #e0e0e0;
+	}
+}
 /* Make all main tab content pages vertically scrollable except login */
 .tab-content {
 	overflow-y: visible;
@@ -16,7 +31,88 @@
 	overflow-y: visible !important;
 	max-height: unset !important;
 }
-@media (max-width: 600px) {
+@media (max-width: 550px) {
+	#mealplan-table {
+		display: none !important;
+	}
+	#mealplan-table-mobile {
+		display: table !important;
+		width: 65vw;
+		min-width: 0;
+		font-size: 0.78em;
+		background: #f9f9fc;
+		border-radius: 10px;
+		box-shadow: 0 2px 8px rgba(39,92,200,0.07);
+		margin-bottom: 1em;
+		margin-left: 0;
+		margin-right: 0;
+	}
+	#mealplan-table-mobile th, #mealplan-table-mobile td {
+		min-width: 30px;
+		padding: 0.18em 0.05em;
+		text-align: center;
+		background: #fff;
+		border: 1px solid #e0e0e0;
+	}
+	#mealplan-table-mobile th {
+		background: #f0f4fa;
+		font-weight: 700;
+	}
+	#mealplan-content {
+		width: 80vw;
+		overflow-y: auto;
+		overflow-x: auto;
+		padding-bottom: 1em;
+		max-height: 70vh;
+		margin-left: 0;
+		margin-right: 0;
+	}
+}
+	/* Make My Recipes card rows horizontally scrollable on mobile */
+	#liked-list > div {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: nowrap !important;
+		overflow-x: auto !important;
+		gap: 0.5em !important;
+		width: 100vw;
+		margin-bottom: 1.5em;
+		padding-bottom: 0.5em;
+		-webkit-overflow-scrolling: touch;
+	}
+	#liked-list > div > div {
+		min-width: 180px !important;
+		max-width: 80vw;
+		flex: 0 0 auto !important;
+	}
+	/* Clean up recipe cards in My Recipes for mobile */
+	#liked-list li {
+		flex-direction: column;
+		align-items: flex-start;
+		min-height: 80px;
+		max-width: 98vw;
+		width: 98vw;
+		margin: 0.7em 0;
+		padding: 1em 1em;
+		font-size: 1em;
+		box-shadow: 0 2px 8px rgba(39,92,200,0.10);
+	}
+	#liked-list li img {
+		width: 100%;
+		height: auto;
+		max-width: 220px;
+		max-height: 120px;
+		margin-bottom: 0.7em;
+		border-radius: 8px;
+		object-fit: cover;
+	}
+	#liked-list li span {
+		font-size: 1em;
+		margin: 0.2em 0 0.2em 0;
+		width: 100%;
+		display: block;
+		text-align: left;
+	}
 	#pantry.tab-content {
 		overflow-y: auto !important;
 		max-height: 100vh !important;
@@ -29,7 +125,7 @@
 	#liked.tab-content:not([style*="display: block"]),
 	#liked.tab-content[style*="display: none"],
 	#mealplan.tab-content:not([style*="display: block"]),
-	#mealplan.tab-content[style*="display: none"]) {
+	#mealplan.tab-content[style*="display: none"] {
 		display: none !important;
 	}
 		#liked.tab-content > h2 {
@@ -683,6 +779,7 @@ body {
 	background: linear-gradient(90deg, #e3edfa 60%, #a7c7f7 100%);
 	color: #2563eb;
 	padding: 0.7em 1.6em;
+}
 #auth {
 	display: flex;
 	flex-direction: column;
@@ -1054,4 +1151,5 @@ input, button { margin: 0.5em; }
 	color: #d90429;
 	text-decoration: none;
 	cursor: pointer;
+}
 }

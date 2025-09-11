@@ -470,7 +470,7 @@ ingredientInput.addEventListener('input', function() {
   function loadMealPlan(uid) {
     db.collection('mealPlans').doc(uid).onSnapshot(doc => {
       mealPlan = doc.data() || {};
-      // Fill table
+      // Desktop table
       document.querySelectorAll('.meal-cell').forEach(cell => {
         const day = cell.getAttribute('data-day');
         const meal = cell.getAttribute('data-meal');
@@ -487,20 +487,51 @@ ingredientInput.addEventListener('input', function() {
           cell.innerHTML = '';
         }
       });
-    // Remove meal on 'x' click
-    document.querySelectorAll('.meal-cell').forEach(cell => {
-      cell.querySelectorAll('.remove-meal').forEach(xBtn => {
-        xBtn.onclick = (e) => {
-          e.stopPropagation();
-          const day = cell.getAttribute('data-day');
-          const meal = cell.getAttribute('data-meal');
-          if (mealPlan[day]) {
-            delete mealPlan[day][meal];
-            db.collection('mealPlans').doc(uid).set(mealPlan, { merge: true });
-          }
-        };
+      // Mobile table
+      document.querySelectorAll('.meal-cell-mobile').forEach(cell => {
+        const day = cell.getAttribute('data-day');
+        const meal = cell.getAttribute('data-meal');
+        if (mealPlan[day] && mealPlan[day][meal]) {
+          const recipe = mealPlan[day][meal];
+          cell.innerHTML = `
+            <div class="meal-card">
+              <img src="${recipe.img}" alt="${recipe.title}" class="meal-card-img">
+              <div class="meal-card-title">${recipe.title}</div>
+              <span class="remove-meal-mobile" title="Remove">&times;</span>
+            </div>
+          `;
+        } else {
+          cell.innerHTML = '';
+        }
       });
-    });
+      // Remove meal on 'x' click for desktop
+      document.querySelectorAll('.meal-cell').forEach(cell => {
+        cell.querySelectorAll('.remove-meal').forEach(xBtn => {
+          xBtn.onclick = (e) => {
+            e.stopPropagation();
+            const day = cell.getAttribute('data-day');
+            const meal = cell.getAttribute('data-meal');
+            if (mealPlan[day]) {
+              delete mealPlan[day][meal];
+              db.collection('mealPlans').doc(uid).set(mealPlan, { merge: true });
+            }
+          };
+        });
+      });
+      // Remove meal on 'x' click for mobile
+      document.querySelectorAll('.meal-cell-mobile').forEach(cell => {
+        cell.querySelectorAll('.remove-meal-mobile').forEach(xBtn => {
+          xBtn.onclick = (e) => {
+            e.stopPropagation();
+            const day = cell.getAttribute('data-day');
+            const meal = cell.getAttribute('data-meal');
+            if (mealPlan[day]) {
+              delete mealPlan[day][meal];
+              db.collection('mealPlans').doc(uid).set(mealPlan, { merge: true });
+            }
+          };
+        });
+      });
   // Clear all button logic
   const clearBtn = document.getElementById('clear-mealplan');
   if (clearBtn) {
