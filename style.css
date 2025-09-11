@@ -670,15 +670,26 @@ body {
 #auth {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-end;
-	justify-content: flex-start;
+	align-items: center;
+	justify-content: center;
 	min-height: 100vh;
 	width: 100vw;
-	padding-left: 55vw;
-	padding-top: 25vh;
+	padding: 2em;
+	box-sizing: border-box;
 }
 
-@media (max-width: 900px) {
+@media (min-width: 601px) {
+	#auth {
+		align-items: flex-end;
+		justify-content: flex-start;
+		padding-left: 55vw;
+		padding-top: 25vh;
+		padding-right: 2em;
+		padding-bottom: 2em;
+	}
+}
+
+@media (max-width: 900px) and (min-width: 601px) {
 	#auth {
 		padding-left: 35vw;
 		padding-top: 15vh;
@@ -688,28 +699,35 @@ body {
 /* Login page mobile styles - separate from tab content */
 @media (max-width: 600px) {
 	.login-bg {
-		align-items: flex-start;
-		justify-content: flex-start;
-		background-position: 40% center;
-		overflow-y: hidden;
-		height: 100vh;
+		align-items: center;
+		justify-content: center;
+		background-position: center;
+		overflow-y: auto;
+		min-height: 100vh;
+		height: auto;
 	}
 	
 	#auth {
 		align-items: center;
-		justify-content: flex-start;
-		width: 90vw;
-		height: 100vh;
-		padding: 10vw 0 0 0;
-		padding-left: 7.5vw;
-		overflow-y: hidden;
+		justify-content: center;
+		width: 100vw;
+		min-height: 100vh;
+		padding: 2em 1em;
+		padding-left: 0;
+		overflow-y: visible;
+		display: flex;
+		flex-direction: column;
 	}
 	
 	#auth input, #auth button {
-		width: 90vw;
-		max-width: 350px;
+		width: 100%;
+		max-width: 320px;
 		font-size: 1.1em;
 		margin-bottom: 1.2em;
+		box-sizing: border-box;
+		margin-left: auto;
+		margin-right: auto;
+		display: block;
 	}
 	
 	#auth input[type="email"], #auth input[type="password"] {
@@ -720,6 +738,12 @@ body {
 		background: #fff;
 		transition: box-shadow 0.18s, border 0.18s;
 		outline: none;
+		width: 100%;
+		max-width: 320px;
+		box-sizing: border-box;
+		margin-left: auto;
+		margin-right: auto;
+		display: block;
 	}
 	
 	#auth input[type="email"]:focus, #auth input[type="password"]:focus {
@@ -728,11 +752,12 @@ body {
 	}
 	
 	#login-title {
-		font-size: 1.6em;
+		font-size: 1.8em;
 		margin-top: 0.5em;
-		margin-bottom: 1em;
-		padding-left: 20vw;
+		margin-bottom: 1.5em;
+		padding: 0;
 		text-align: center;
+		width: 100%;
 	}
 }
 /* Grocery List Styling */
@@ -783,12 +808,12 @@ body {
 #auth {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-end;
-	justify-content: flex-start;
+	align-items: center;
+	justify-content: center;
 	min-height: 100vh;
 	width: 100vw;
-	padding-left: 55vw;
-	padding-top: 5vh;
+	padding: 2em;
+	box-sizing: border-box;
 }
 /* White style for tab and auth buttons */
 .tab-btn, #login, #signup {
