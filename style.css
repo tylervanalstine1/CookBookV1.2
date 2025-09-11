@@ -1,3 +1,17 @@
+/* Modern input styling for login (all screen sizes) */
+#auth input[type="email"], #auth input[type="password"] {
+	border-radius: 14px;
+	border: 1.5px solid #a7c7f7;
+	box-shadow: 0 2px 8px rgba(39, 92, 200, 0.10);
+	padding: 0.9em 1.1em;
+	background: #fff;
+	transition: box-shadow 0.18s, border 0.18s;
+	outline: none;
+}
+#auth input[type="email"]:focus, #auth input[type="password"]:focus {
+	box-shadow: 0 4px 16px rgba(37,99,235,0.18);
+	border: 2px solid #2563eb;
+}
 #ingredients li {
 	display: flex;
 	align-items: center;
@@ -144,6 +158,7 @@ html, body {
 	overflow-y: hidden;
 	box-sizing: border-box;
 }
+/* Responsive login background */
 .login-bg {
 	background-image: url('https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/spinach-leaves-near-vegetables-mushrooms.jpg?alt=media&token=e0e4d6fe-7a42-433d-a29b-c869d9c46fec');
 	background-size: cover;
@@ -391,6 +406,7 @@ body {
 	justify-content: center;
 }
 
+/* Responsive login form container */
 #auth {
 	display: flex;
 	flex-direction: column;
@@ -400,6 +416,54 @@ body {
 	width: 100vw;
 	padding-left: 55vw;
 	padding-top: 25vh;
+}
+
+@media (max-width: 900px) {
+	#auth {
+		padding-left: 35vw;
+		padding-top: 15vh;
+	}
+}
+
+@media (max-width: 600px) {
+	.login-bg {
+		align-items: flex-start;
+		justify-content: flex-start;
+		background-position: 40% center;
+	}
+	#auth {
+		align-items: center;
+		justify-content: flex-start;
+		width: 90vw;
+		min-height: 90vh;
+		padding: 10vw 0 0 0;
+		padding-left: 7.5vw;
+	}
+	#auth input, #auth button {
+		width: 90vw;
+		max-width: 350px;
+		font-size: 1.1em;
+		margin-bottom: 1.2em; /* Added margin-bottom for vertical padding */
+	}
+	#auth input[type="email"], #auth input[type="password"] {
+		border-radius: 14px;
+		border: 1.5px solid #a7c7f7;
+		box-shadow: 0 2px 8px rgba(39, 92, 200, 0.10);
+		padding: 0.9em 1.1em;
+		background: #fff;
+		transition: box-shadow 0.18s, border 0.18s;
+		outline: none;
+	}
+	#auth input[type="email"]:focus, #auth input[type="password"]:focus {
+		box-shadow: 0 4px 16px rgba(37,99,235,0.18);
+		border: 2px solid #2563eb;
+	}
+	#login-title {
+		font-size: 1.5em;
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+		padding-left:20vw;
+	}
 }
 /* Grocery List Styling */
 #grocery-list-section {
@@ -760,7 +824,6 @@ input, button { margin: 0.5em; }
 	overflow: auto;
 	background-color: rgba(0,0,0,0.3);
 }
-.modal-content {
 #login-title {
 	text-align: center;
 	font-family: 'Quicksand', 'Arial', sans-serif;
@@ -778,6 +841,7 @@ input, button { margin: 0.5em; }
 		1px 1px 0 #b3c6f7,
 		2px 2px 0 #b3c6f7;
 }
+.modal-content {
 	background-color: #fff;
 	margin: 10% auto;
 	padding: 2em;
@@ -795,24 +859,25 @@ input, button { margin: 0.5em; }
 	font-weight: bold;
 	cursor: pointer;
 	position: absolute;
+}
 
-	#mealplan-table th, #mealplan-table td {
-		border: 1px solid #e0e0e0;
-		padding: 1.5em 0.5em;
-		height: 60px;
-	}
+#mealplan-table th, #mealplan-table td {
+	border: 1px solid #e0e0e0;
+	padding: 1.5em 0.5em;
+	height: 60px;
+}
 
-	#mealplan-table tr {
-		border-bottom: 2px solid #d0d0d0;
-	}
+#mealplan-table tr {
+	border-bottom: 2px solid #d0d0d0;
+}
 
-	#mealplan-table tbody tr:not(:last-child) {
-		margin-bottom: 20px;
-		border-bottom: 8px solid #f5f5f5;
-	}
+#mealplan-table tbody tr:not(:last-child) {
+	margin-bottom: 20px;
+	border-bottom: 8px solid #f5f5f5;
+}
+
 .close:focus {
 	color: #d90429;
 	text-decoration: none;
 	cursor: pointer;
-}
 }
