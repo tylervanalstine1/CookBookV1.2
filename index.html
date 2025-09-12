@@ -163,13 +163,26 @@
 
    <!-- Pantry Tab -->
    <div id="pantry" class="tab-content" style="display:none;">
-     <h2>Your Pantry</h2>
-     <div style="position:relative;">
-       <input type="text" id="ingredient" placeholder="Add ingredient" autocomplete="off">
-       <div id="autocomplete-list" class="autocomplete-items"></div>
+     <div class="pantry-container">
+       <!-- Left Side - Pantry -->
+       <div class="pantry-section">
+         <h2>Your Pantry</h2>
+         <div class="ingredient-input-container">
+           <input type="text" id="ingredient" placeholder="Add ingredient" autocomplete="off">
+           <div id="autocomplete-list" class="autocomplete-items"></div>
+         </div>
+         <ul id="ingredients" class="ingredients-list"></ul>
+       </div>
+       
+       <!-- Right Side - Grocery List -->
+       <div class="grocery-section">
+         <h2>Grocery List</h2>
+         <p class="grocery-subtitle">Items needed from your meal plan</p>
+         <ul id="grocery-list" class="grocery-list"></ul>
+       </div>
      </div>
-     <ul id="ingredients"></ul>
-     <!-- Modal for amount input (moved above grocery list) -->
+     
+     <!-- Modal for amount input -->
      <div id="amount-modal" class="modal" style="display:none;">
        <div class="modal-content">
          <span id="close-modal" class="close">&times;</span>
@@ -177,11 +190,6 @@
          <input type="number" id="amount-input" min="1" placeholder="Amount">
          <button id="confirm-amount">Add to Pantry</button>
        </div>
-     </div>
-     <!-- Grocery List Section (now under pantry tab) -->
-     <div id="grocery-list-section">
-       <h2>Grocery List</h2>
-       <ul id="grocery-list"></ul>
      </div>
    </div>
 

@@ -763,6 +763,146 @@ body {
 		width: 100%;
 	}
 }
+/* Pantry Layout */
+.pantry-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  width: 100%;
+}
+
+.pantry-section, .grocery-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(39, 92, 200, 0.08);
+  border: 1px solid #f0f4f8;
+  min-width: 0;
+}
+
+.pantry-section h2, .grocery-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2563eb;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-bottom: 2px solid #e0f2fe;
+  padding-bottom: 0.5rem;
+}
+
+.grocery-subtitle {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  margin-top: -0.5rem;
+  font-style: italic;
+}
+
+.ingredient-input-container {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.ingredient-input-container input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+.ingredient-input-container input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ingredients-list, .grocery-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ingredients-list li, .grocery-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  gap: 8px;
+}
+
+.ingredients-list li:hover, .grocery-list li:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.ingredients-list li span, .grocery-list li span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.ingredients-list li button, .grocery-list li button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: auto;
+  width: auto;
+  max-width: 80px;
+}
+
+.ingredients-list li button:hover, .grocery-list li button:hover {
+  background: #dc2626;
+}
+
+.grocery-list li button {
+  background: #10b981;
+  max-width: 90px;
+  font-size: 0.7rem;
+}
+
+.grocery-list li button:hover {
+  background: #059669;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pantry-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .pantry-section, .grocery-section {
+    padding: 1rem;
+  }
+  
+  .ingredients-list, .grocery-list {
+    max-height: 300px;
+  }
+}
+
 /* Grocery List Styling */
 #grocery-list-section {
 	display: flex;

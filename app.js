@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let itemsFromDB = [];
   let recipeIndex = 0;
   let selectedItem = null;
+  let selectedIngredientId = null;
   let mealPlan = {};
   let likedRecipesCache = [];
 
@@ -58,17 +59,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load items from Firestore in real-time for autocomplete
 function loadItemsRealtime() {
-  console.log('Setting up Firestore onSnapshot for items...');
-  db.collection('items').onSnapshot(
+  console.log('Setting up Firestore onSnapshot for ingredients...');
+  
+  // Quick check to see if collection exists and log structure
+  db.collection('ingredients').limit(3).get()
+    .then(snapshot => {
+      console.log('=== FIRESTORE INGREDIENTS INFO ===');
+      console.log('Found', snapshot.size, 'ingredient documents');
+      
+      // Log structure of first few documents
+      snapshot.docs.forEach((doc, index) => {
+        const data = doc.data();
+        console.log(`Ingredient ${index + 1}:`, {
+          id: doc.id, // This is the ingredient name
+          baseUnit: data.baseUnit,
+          conversions: Object.keys(data.conversions || {}),
+          packageSizes: data.packageSizes?.length || 0
+        });
+      });
+      console.log('=== END INGREDIENTS INFO ===');
+    })
+    .catch(error => {
+      console.error('Error checking ingredients collection:', error);
+    });
+  
+  db.collection('ingredients').onSnapshot(
     snapshot => {
-      itemsFromDB = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Filter out items with missing or non-string name fields
-      const invalidItems = itemsFromDB.filter(item => typeof item.name !== 'string');
-      if (invalidItems.length > 0) {
-        console.warn('Some items are missing a valid name field:', invalidItems);
-      }
-      itemsFromDB = itemsFromDB.filter(item => typeof item.name === 'string');
-      console.log('Loaded items from Firestore:', itemsFromDB);
+      console.log('onSnapshot triggered with', snapshot.size, 'documents');
+      
+      itemsFromDB = snapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log('Processing document:', doc.id, data);
+        
+        return { 
+          id: doc.id, 
+          ingredientId: doc.id, // Document ID is the ingredient name
+          name: doc.id, // Document ID is the ingredient name (like "Bread")
+          baseUnit: data.baseUnit,
+          conversions: data.conversions || {},
+          packageSizes: data.packageSizes || [],
+          ...data 
+        };
+      });
+      
+      // All documents should have valid names since we use the document ID
+      console.log('Final processed ingredients:', itemsFromDB);
+      console.log('Total valid ingredients loaded:', itemsFromDB.length);
     },
     error => {
       console.error('onSnapshot error:', error);
@@ -79,7 +115,7 @@ function loadItemsRealtime() {
 // Start real-time loading of items
 loadItemsRealtime();
 
-// Autocomplete logic (uses Firestore items)
+// Autocomplete logic (uses Firestore ingredients)
 ingredientInput.addEventListener('input', function() {
   const val = this.value.trim().toLowerCase();
   autocompleteList.innerHTML = '';
@@ -88,7 +124,7 @@ ingredientInput.addEventListener('input', function() {
   matches.forEach(item => {
     const div = document.createElement('div');
     div.textContent = item.name;
-    div.onclick = () => selectAutocomplete(item.name);
+    div.onclick = () => selectAutocomplete(item.name, item.ingredientId);
     autocompleteList.appendChild(div);
   });
 });
@@ -606,11 +642,14 @@ ingredientInput.addEventListener('input', function() {
           });
           if (!alreadyInPantry) {
             const li = document.createElement('li');
-            li.textContent = `${amtStr}${unit ? ' ' + unit : ''} of ${cleanName}`;
+            
+            // Create text span
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `${amtStr}${unit ? ' ' + unit : ''} of ${cleanName}`;
+            li.appendChild(textSpan);
+            
             const haveBtn = document.createElement('button');
             haveBtn.textContent = 'I have this';
-            haveBtn.style.marginLeft = '1em';
-            haveBtn.style.fontSize = '0.95em';
             haveBtn.onclick = async () => {
               const user = auth.currentUser;
               if (!user) return;
@@ -669,78 +708,151 @@ ingredientInput.addEventListener('input', function() {
     auth.signOut();
   };
 
-  // Autocomplete logic (uses Firestore items)
-  ingredientInput.addEventListener('input', function() {
-    const val = this.value.trim().toLowerCase();
-    autocompleteList.innerHTML = '';
-    if (!val) return;
-    const matches = itemsFromDB.filter(item => item.name.toLowerCase().includes(val));
-    matches.forEach(item => {
-      const div = document.createElement('div');
-      div.textContent = item.name;
-      div.onclick = () => selectAutocomplete(item.name);
-      autocompleteList.appendChild(div);
-    });
-  });
-
   // Hide autocomplete on blur (with slight delay for click)
   ingredientInput.addEventListener('blur', () => setTimeout(() => autocompleteList.innerHTML = '', 150));
 
-  function selectAutocomplete(item) {
-    selectedItem = item;
-    ingredientInput.value = item;
+  function selectAutocomplete(itemName, ingredientId) {
+    selectedItem = itemName;
+    selectedIngredientId = ingredientId;
+    ingredientInput.value = itemName;
     autocompleteList.innerHTML = '';
-    showAmountModal(item);
+    showAmountModal(itemName);
   }
 
-  // Show modal to ask for amount
+  // Show modal to ask for amount with unit selection
   function showAmountModal(item) {
-    modalItemName.textContent = `How many ${item.toLowerCase()}?`;
-    amountInput.placeholder = 'Amount';
-    amountInput.value = '';
+    modalItemName.textContent = `How much ${item.toLowerCase()} do you have?`;
+    
+    // Find the ingredient data to get conversions and package sizes
+    const ingredientData = itemsFromDB.find(ing => ing.name === item || ing.ingredientId === selectedIngredientId);
+    
+    // Clear existing content
+    const modalContent = document.querySelector('#amount-modal .modal-content');
+    modalContent.innerHTML = `
+      <span id="close-modal" class="close">&times;</span>
+      <p id="modal-item-name">How much ${item.toLowerCase()} do you have?</p>
+      <div style="display: flex; gap: 10px; align-items: center; margin: 1em 0;">
+        <input type="number" id="amount-input" min="0.1" step="0.1" placeholder="Quantity" style="flex: 1;">
+        <select id="unit-select" style="flex: 1; padding: 0.5em; border-radius: 8px; border: 1px solid #ccc;">
+          <option value="">Select unit...</option>
+        </select>
+      </div>
+      <button id="confirm-amount">Add to Pantry</button>
+    `;
+    
+    // Get new references after rebuilding content
+    const newAmountInput = document.getElementById('amount-input');
+    const unitSelect = document.getElementById('unit-select');
+    const newCloseModal = document.getElementById('close-modal');
+    const newConfirmAmount = document.getElementById('confirm-amount');
+    
+    // Populate unit options
+    if (ingredientData) {
+      // Only add conversion units (not base unit or package sizes)
+      if (ingredientData.conversions) {
+        Object.keys(ingredientData.conversions).forEach(unit => {
+          const option = document.createElement('option');
+          option.value = unit;
+          option.textContent = unit;
+          unitSelect.appendChild(option);
+        });
+      }
+    }
+    
+    // Set up event handlers
+    newCloseModal.onclick = () => {
+      amountModal.style.display = 'none';
+      selectedItem = null;
+      selectedIngredientId = null;
+    };
+    
+    newAmountInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && unitSelect.value) {
+        newConfirmAmount.click();
+      }
+    });
+    
+    newConfirmAmount.onclick = async () => {
+      const user = auth.currentUser;
+      const quantity = parseFloat(newAmountInput.value);
+      const unit = unitSelect.value;
+      
+      if (user && selectedItem && selectedIngredientId && quantity > 0 && unit) {
+        // Calculate normalized value
+        let normalized = quantity;
+        
+        if (ingredientData) {
+          if (unit === ingredientData.baseUnit) {
+            normalized = quantity;
+          } else if (ingredientData.conversions && ingredientData.conversions[unit]) {
+            normalized = quantity * ingredientData.conversions[unit];
+          } else if (ingredientData.packageSizes) {
+            const packageSize = ingredientData.packageSizes.find(pkg => pkg.unit === unit);
+            if (packageSize) {
+              normalized = quantity * packageSize.normalized;
+            }
+          }
+        }
+        
+        const pantryRef = db.collection('pantries').doc(user.uid);
+        const pantryDoc = await pantryRef.get();
+        let ingredients = (pantryDoc.exists && pantryDoc.data().ingredients) ? pantryDoc.data().ingredients : [];
+        
+        // Create new ingredient entry
+        const ingredientEntry = {
+          ingredientId: selectedIngredientId,
+          quantity: quantity,
+          unit: unit,
+          normalized: normalized
+        };
+        
+        // Check if ingredient already exists (by ingredientId and unit)
+        let found = false;
+        ingredients = ingredients.map(entry => {
+          if (typeof entry === 'object' && entry.ingredientId === selectedIngredientId && entry.unit === unit) {
+            found = true;
+            return {
+              ...entry,
+              quantity: (entry.quantity || 0) + quantity,
+              normalized: (entry.normalized || 0) + normalized
+            };
+          }
+          return entry;
+        });
+        
+        if (!found) {
+          ingredients.push(ingredientEntry);
+        }
+        
+        await pantryRef.set({ ingredients }, { merge: true });
+        ingredientInput.value = '';
+        amountModal.style.display = 'none';
+        selectedItem = null;
+        selectedIngredientId = null;
+      } else {
+        alert('Please enter a valid quantity and select a unit.');
+      }
+    };
+    
     amountModal.style.display = 'block';
-    amountInput.focus();
+    newAmountInput.focus();
   }
 
   // Close modal
   closeModal.onclick = () => {
     amountModal.style.display = 'none';
     selectedItem = null;
+    selectedIngredientId = null;
   };
 
-
-  // Confirm amount and add to pantry (increment if exists)
-  confirmAmount.onclick = async () => {
-    const user = auth.currentUser;
-    const amount = parseInt(amountInput.value, 10);
-    if (user && selectedItem && amount > 0) {
-      const pantryRef = db.collection('pantries').doc(user.uid);
-      const pantryDoc = await pantryRef.get();
-      let ingredients = (pantryDoc.exists && pantryDoc.data().ingredients) ? pantryDoc.data().ingredients : [];
-      // Parse existing entries into {name, amount}
-      let found = false;
-      ingredients = ingredients.map(entry => {
-        const match = entry.match(/^(.*) x (\d+)$/);
-        if (match && match[1] === selectedItem) {
-          found = true;
-          const newAmount = parseInt(match[2], 10) + amount;
-          return `${selectedItem} x ${newAmount}`;
-        }
-        return entry;
-      });
-      if (!found) {
-        ingredients.push(`${selectedItem} x ${amount}`);
-      }
-      await pantryRef.set({ ingredients }, { merge: true });
-      ingredientInput.value = '';
-      amountModal.style.display = 'none';
-      selectedItem = null;
-    }
-  };
 
   // Allow Enter key in modal
   amountInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') confirmAmount.onclick();
+    if (e.key === 'Enter') {
+      // Find the current confirm button and click it
+      const currentConfirmBtn = document.getElementById('confirm-amount');
+      if (currentConfirmBtn) currentConfirmBtn.click();
+    }
   });
 
   // Load pantry ingredients
@@ -750,18 +862,165 @@ ingredientInput.addEventListener('input', function() {
         const data = doc.data();
         ingredientsList.innerHTML = '';
         if (data && data.ingredients) {
+          // Group ingredients by ingredientId
+          const groupedIngredients = {};
+          
           data.ingredients.forEach(ingredient => {
+            if (typeof ingredient === 'object' && ingredient.ingredientId) {
+              // New format with units and normalization
+              const id = ingredient.ingredientId;
+              if (!groupedIngredients[id]) {
+                groupedIngredients[id] = [];
+              }
+              groupedIngredients[id].push(ingredient);
+            } else {
+              // Legacy formats - display as-is
+              const li = document.createElement('li');
+              let displayText = typeof ingredient === 'object' ? 
+                `${ingredient.name} x ${ingredient.amount || 1}` : ingredient;
+              
+              const textSpan = document.createElement('span');
+              textSpan.textContent = displayText;
+              li.appendChild(textSpan);
+              
+              const removeBtn = document.createElement('button');
+              removeBtn.textContent = 'Remove';
+              removeBtn.onclick = () => removeIngredient(uid, ingredient);
+              li.appendChild(removeBtn);
+              ingredientsList.appendChild(li);
+            }
+          });
+          
+          // Display grouped ingredients
+          Object.keys(groupedIngredients).forEach(ingredientId => {
+            const ingredientEntries = groupedIngredients[ingredientId];
             const li = document.createElement('li');
-            li.textContent = ingredient;
-            // Remove button
+            
+            // Create smart display text
+            let displayText = createSmartDisplayText(ingredientId, ingredientEntries);
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = displayText;
+            li.appendChild(textSpan);
+            
+            // Remove button (removes all entries for this ingredient)
             const removeBtn = document.createElement('button');
             removeBtn.textContent = 'Remove';
-            removeBtn.onclick = () => removeIngredient(uid, ingredient);
+            removeBtn.onclick = () => {
+              // Remove all entries for this ingredient
+              ingredientEntries.forEach(entry => removeIngredient(uid, entry));
+            };
             li.appendChild(removeBtn);
             ingredientsList.appendChild(li);
           });
         }
       });
+  }
+  
+  // Helper function to create smart display text
+  function createSmartDisplayText(ingredientId, entries) {
+    // Sort entries by unit priority (loaf > half_loaf > slice)
+    const unitPriority = { 'loaf': 3, 'half_loaf': 2, 'slice': 1 };
+    entries.sort((a, b) => (unitPriority[b.unit] || 0) - (unitPriority[a.unit] || 0));
+    
+    // Calculate total normalized amount
+    const totalNormalized = entries.reduce((sum, entry) => sum + (entry.normalized || 0), 0);
+    
+    // Find ingredient data for conversions
+    const ingredientData = itemsFromDB.find(ing => ing.ingredientId === ingredientId);
+    
+    if (!ingredientData || !ingredientData.conversions) {
+      // Fallback to original display if no conversion data
+      const parts = [];
+      entries.forEach(entry => {
+        const quantity = entry.quantity;
+        const unit = entry.unit;
+        
+        if (quantity > 0) {
+          let unitText = unit;
+          if (quantity > 1) {
+            if (unit === 'slice') unitText = 'slices';
+            else if (unit === 'loaf') unitText = 'loaves';
+            else if (unit === 'half_loaf') unitText = 'half loaves';
+          } else if (unit === 'half_loaf') {
+            unitText = 'half loaf';
+          }
+          parts.push(`${quantity} ${unitText}`);
+        }
+      });
+      
+      return parts.length > 0 ? `${parts.join(' and ')} of ${ingredientId}` : ingredientId;
+    }
+    
+    // Convert to most efficient units
+    let remainingNormalized = totalNormalized;
+    const convertedAmounts = {};
+    
+    // Convert to largest units first
+    const conversionUnits = ['loaf', 'half_loaf', 'slice'];
+    
+    conversionUnits.forEach(unit => {
+      if (ingredientData.conversions[unit] && remainingNormalized >= ingredientData.conversions[unit]) {
+        const unitValue = ingredientData.conversions[unit];
+        const quantity = Math.floor(remainingNormalized / unitValue);
+        if (quantity > 0) {
+          convertedAmounts[unit] = quantity;
+          remainingNormalized -= quantity * unitValue;
+        }
+      }
+    });
+    
+    // Handle any remaining fractional amounts
+    if (remainingNormalized > 0) {
+      // Find the smallest unit to represent remainder
+      const smallestUnit = conversionUnits[conversionUnits.length - 1]; // 'slice'
+      if (ingredientData.conversions[smallestUnit]) {
+        const fractionalQuantity = remainingNormalized / ingredientData.conversions[smallestUnit];
+        if (fractionalQuantity > 0) {
+          // Round to reasonable precision
+          const roundedQuantity = Math.round(fractionalQuantity * 10) / 10;
+          if (roundedQuantity > 0) {
+            convertedAmounts[smallestUnit] = (convertedAmounts[smallestUnit] || 0) + roundedQuantity;
+          }
+        }
+      }
+    }
+    
+    // Create display text
+    const parts = [];
+    conversionUnits.forEach(unit => {
+      if (convertedAmounts[unit] && convertedAmounts[unit] > 0) {
+        const quantity = convertedAmounts[unit];
+        let unitText = unit;
+        
+        // Handle pluralization
+        if (quantity > 1) {
+          if (unit === 'slice') unitText = 'slices';
+          else if (unit === 'loaf') unitText = 'loaves';
+          else if (unit === 'half_loaf') unitText = 'half loaves';
+        } else if (unit === 'half_loaf') {
+          unitText = 'half loaf';
+        }
+        
+        // Format quantity (remove .0 for whole numbers)
+        const formattedQuantity = quantity % 1 === 0 ? quantity.toString() : quantity.toString();
+        parts.push(`${formattedQuantity} ${unitText}`);
+      }
+    });
+    
+    let result;
+    if (parts.length === 0) {
+      result = ingredientId;
+    } else if (parts.length === 1) {
+      result = `${parts[0]} of ${ingredientId}`;
+    } else {
+      // Join with "and" for multiple units
+      const allButLast = parts.slice(0, -1).join(', ');
+      const last = parts[parts.length - 1];
+      result = `${allButLast} and ${last} of ${ingredientId}`;
+    }
+    
+    return result;
   }
 
   // Remove ingredient
