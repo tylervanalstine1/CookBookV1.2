@@ -16,11 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const ingredientInput = document.getElementById('ingredient');
   const autocompleteList = document.getElementById('autocomplete-list');
   const ingredientsList = document.getElementById('ingredients');
-  const amountModal = document.getElementById('amount-modal');
-  const closeModal = document.getElementById('close-modal');
-  const modalItemName = document.getElementById('modal-item-name');
-  const amountInput = document.getElementById('amount-input');
-  const confirmAmount = document.getElementById('confirm-amount');
   // Tabs and Recipe Swipe
   const tabsDiv = document.getElementById('tabs');
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -119,8 +114,22 @@ loadItemsRealtime();
 ingredientInput.addEventListener('input', function() {
   const val = this.value.trim().toLowerCase();
   autocompleteList.innerHTML = '';
+  autocompleteList.className = 'autocomplete-items'; // Ensure class is set
   if (!val) return;
-  const matches = itemsFromDB.filter(item => typeof item.name === 'string' && item.name.toLowerCase().includes(val));
+  
+  // Test data for demonstration
+  const testItems = [
+    { name: 'Tomato', ingredientId: 'test1' },
+    { name: 'Onion', ingredientId: 'test2' },
+    { name: 'Garlic', ingredientId: 'test3' },
+    { name: 'Basil', ingredientId: 'test4' },
+    { name: 'Cheese', ingredientId: 'test5' }
+  ];
+  
+  // Use test data if no database items, otherwise use database
+  const items = itemsFromDB.length > 0 ? itemsFromDB : testItems;
+  const matches = items.filter(item => typeof item.name === 'string' && item.name.toLowerCase().includes(val));
+  
   matches.forEach(item => {
     const div = document.createElement('div');
     div.textContent = item.name;
@@ -418,7 +427,7 @@ ingredientInput.addEventListener('input', function() {
   // --- Meal Plan Logic ---
   if (mealplanTable) {
     mealplanTable.addEventListener('click', async function(e) {
-      const cell = e.target.closest('.meal-cell');
+      const cell = e.target.closest('.meal-cell') || e.target.closest('.meal-cell-mobile');
       if (!cell) return;
       const user = auth.currentUser;
       if (!user) return;
@@ -444,6 +453,75 @@ ingredientInput.addEventListener('input', function() {
       // Show modal picker
       showMealPlanPickerModal(filtered, cell, mealType);
     });
+  }
+
+  // Add separate listener for mobile meal plan table if it exists
+  const mealplanTableMobile = document.getElementById('mealplan-table-mobile');
+  if (mealplanTableMobile) {
+    mealplanTableMobile.addEventListener('click', async function(e) {
+      const cell = e.target.closest('.meal-cell-mobile');
+      if (!cell) return;
+      const user = auth.currentUser;
+      if (!user) return;
+      // Load liked recipes if not cached
+      if (!likedRecipesCache.length) {
+        const doc = await db.collection('likedRecipes').doc(user.uid).get();
+        likedRecipesCache = (doc.data() && doc.data().recipes) ? doc.data().recipes : [];
+      }
+      if (!likedRecipesCache.length) {
+        alert('You have no liked recipes!');
+        return;
+      }
+      // Determine meal type
+      const mealType = cell.getAttribute('data-meal');
+      // Filter liked recipes by course
+      const filtered = likedRecipesCache.filter(r => {
+        const course = (r.course || '').toLowerCase();
+        if (mealType === 'breakfast') return course.includes('breakfast');
+        if (mealType === 'lunch') return course.includes('lunch');
+        if (mealType === 'dinner') return course.includes('dinner');
+        return true;
+      });
+      // Show modal picker
+      showMealPlanPickerModal(filtered, cell, mealType);
+    });
+  }
+
+  // Add global click listener as fallback for mobile meal cells
+  document.addEventListener('click', async function(e) {
+    const cell = e.target.closest('.meal-cell-mobile');
+    if (!cell) return;
+    
+    // Only handle if not already handled by table listeners
+    if (mealplanTable && mealplanTable.contains(cell)) return;
+    if (mealplanTableMobile && mealplanTableMobile.contains(cell)) return;
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    // Load liked recipes if not cached
+    if (!likedRecipesCache.length) {
+      const doc = await db.collection('likedRecipes').doc(user.uid).get();
+      likedRecipesCache = (doc.data() && doc.data().recipes) ? doc.data().recipes : [];
+    }
+    if (!likedRecipesCache.length) {
+      alert('You have no liked recipes!');
+      return;
+    }
+    
+    // Determine meal type
+    const mealType = cell.getAttribute('data-meal');
+    // Filter liked recipes by course
+    const filtered = likedRecipesCache.filter(r => {
+      const course = (r.course || '').toLowerCase();
+      if (mealType === 'breakfast') return course.includes('breakfast');
+      if (mealType === 'lunch') return course.includes('lunch');
+      if (mealType === 'dinner') return course.includes('dinner');
+      return true;
+    });
+    // Show modal picker
+    showMealPlanPickerModal(filtered, cell, mealType);
+  });
 
     // Modal logic for meal plan picker
     function showMealPlanPickerModal(recipes, cell, mealType) {
@@ -501,7 +579,6 @@ ingredientInput.addEventListener('input', function() {
     function capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
     }
-  }
 
   function loadMealPlan(uid) {
     db.collection('mealPlans').doc(uid).onSnapshot(doc => {
@@ -711,149 +788,260 @@ ingredientInput.addEventListener('input', function() {
   // Hide autocomplete on blur (with slight delay for click)
   ingredientInput.addEventListener('blur', () => setTimeout(() => autocompleteList.innerHTML = '', 150));
 
-  function selectAutocomplete(itemName, ingredientId) {
+  async function selectAutocomplete(itemName, ingredientId) {
     selectedItem = itemName;
     selectedIngredientId = ingredientId;
-    ingredientInput.value = itemName;
+    ingredientInput.value = '';
     autocompleteList.innerHTML = '';
-    showAmountModal(itemName);
+    
+    // Show unit/amount selection modal
+    showIngredientModal(itemName, ingredientId);
+    
+    selectedItem = null;
+    selectedIngredientId = null;
   }
 
-  // Show modal to ask for amount with unit selection
-  function showAmountModal(item) {
-    modalItemName.textContent = `How much ${item.toLowerCase()} do you have?`;
+  // Show ingredient selection modal
+  function showIngredientModal(itemName, ingredientId) {
+    // Find ingredient data
+    const ingredientData = itemsFromDB.find(ing => ing.name === itemName || ing.ingredientId === ingredientId);
     
-    // Find the ingredient data to get conversions and package sizes
-    const ingredientData = itemsFromDB.find(ing => ing.name === item || ing.ingredientId === selectedIngredientId);
+    // Check if there's only one conversion unit
+    const hasConversions = ingredientData && ingredientData.conversions;
+    const conversionUnits = hasConversions ? Object.keys(ingredientData.conversions) : [];
+    const singleUnit = conversionUnits.length === 1;
     
-    // Clear existing content
-    const modalContent = document.querySelector('#amount-modal .modal-content');
-    modalContent.innerHTML = `
-      <span id="close-modal" class="close">&times;</span>
-      <p id="modal-item-name">How much ${item.toLowerCase()} do you have?</p>
-      <div style="display: flex; gap: 10px; align-items: center; margin: 1em 0;">
-        <input type="number" id="amount-input" min="0.1" step="0.1" placeholder="Quantity" style="flex: 1;">
-        <select id="unit-select" style="flex: 1; padding: 0.5em; border-radius: 8px; border: 1px solid #ccc;">
-          <option value="">Select unit...</option>
-        </select>
-      </div>
-      <button id="confirm-amount">Add to Pantry</button>
+    // Create modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     `;
     
-    // Get new references after rebuilding content
-    const newAmountInput = document.getElementById('amount-input');
-    const unitSelect = document.getElementById('unit-select');
-    const newCloseModal = document.getElementById('close-modal');
-    const newConfirmAmount = document.getElementById('confirm-amount');
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: #fff;
+      padding: 2em;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 90vw;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      position: relative;
+    `;
     
-    // Populate unit options
-    if (ingredientData) {
-      // Only add conversion units (not base unit or package sizes)
-      if (ingredientData.conversions) {
-        Object.keys(ingredientData.conversions).forEach(unit => {
+    // Close button
+    const closeBtn = document.createElement('span');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1em;
+      right: 1.2em;
+      font-size: 2em;
+      cursor: pointer;
+      color: #888;
+    `;
+    closeBtn.onclick = () => document.body.removeChild(modal);
+    
+    // Title
+    const title = document.createElement('h2');
+    title.textContent = `Add ${itemName}`;
+    title.style.cssText = `
+      margin-top: 0;
+      margin-bottom: 1em;
+      color: #2563eb;
+      text-align: center;
+    `;
+    
+    let unitSelect;
+    
+    // Only show unit selection if there are multiple units
+    if (!singleUnit) {
+      // Unit selection
+      const unitLabel = document.createElement('label');
+      unitLabel.textContent = 'Unit:';
+      unitLabel.style.cssText = `
+        display: block;
+        margin-bottom: 0.5em;
+        font-weight: 600;
+      `;
+      
+      unitSelect = document.createElement('select');
+      unitSelect.style.cssText = `
+        width: 100%;
+        padding: 0.8em;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 1em;
+        font-size: 1em;
+      `;
+      
+      // Add unit options
+      if (hasConversions) {
+        conversionUnits.forEach(unit => {
           const option = document.createElement('option');
           option.value = unit;
           option.textContent = unit;
           unitSelect.appendChild(option);
         });
+      } else {
+        // Fallback if no conversions data
+        const option = document.createElement('option');
+        option.value = 'unit';
+        option.textContent = 'unit';
+        unitSelect.appendChild(option);
       }
+      
+      modalContent.appendChild(unitLabel);
+      modalContent.appendChild(unitSelect);
     }
     
-    // Set up event handlers
-    newCloseModal.onclick = () => {
-      amountModal.style.display = 'none';
-      selectedItem = null;
-      selectedIngredientId = null;
-    };
+    // Amount input
+    const amountLabel = document.createElement('label');
+    amountLabel.textContent = 'Amount:';
+    amountLabel.style.cssText = `
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+    `;
     
-    newAmountInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && unitSelect.value) {
-        newConfirmAmount.click();
-      }
-    });
+    const amountInput = document.createElement('input');
+    amountInput.type = 'number';
+    amountInput.value = '1';
+    amountInput.min = '0.1';
+    amountInput.step = '0.1';
+    amountInput.style.cssText = `
+      width: 100%;
+      padding: 0.8em;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 1.5em;
+      font-size: 1em;
+      box-sizing: border-box;
+    `;
     
-    newConfirmAmount.onclick = async () => {
-      const user = auth.currentUser;
-      const quantity = parseFloat(newAmountInput.value);
-      const unit = unitSelect.value;
+    // Add button
+    const addBtn = document.createElement('button');
+    addBtn.textContent = 'Add to Pantry';
+    addBtn.style.cssText = `
+      width: 100%;
+      padding: 1em;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      font-weight: 600;
+    `;
+    
+    addBtn.onclick = async () => {
+      let selectedUnit;
       
-      if (user && selectedItem && selectedIngredientId && quantity > 0 && unit) {
-        // Calculate normalized value
-        let normalized = quantity;
-        
-        if (ingredientData) {
-          if (unit === ingredientData.baseUnit) {
-            normalized = quantity;
-          } else if (ingredientData.conversions && ingredientData.conversions[unit]) {
-            normalized = quantity * ingredientData.conversions[unit];
-          } else if (ingredientData.packageSizes) {
-            const packageSize = ingredientData.packageSizes.find(pkg => pkg.unit === unit);
-            if (packageSize) {
-              normalized = quantity * packageSize.normalized;
-            }
-          }
-        }
-        
-        const pantryRef = db.collection('pantries').doc(user.uid);
-        const pantryDoc = await pantryRef.get();
-        let ingredients = (pantryDoc.exists && pantryDoc.data().ingredients) ? pantryDoc.data().ingredients : [];
-        
-        // Create new ingredient entry
-        const ingredientEntry = {
-          ingredientId: selectedIngredientId,
-          quantity: quantity,
-          unit: unit,
-          normalized: normalized
-        };
-        
-        // Check if ingredient already exists (by ingredientId and unit)
-        let found = false;
-        ingredients = ingredients.map(entry => {
-          if (typeof entry === 'object' && entry.ingredientId === selectedIngredientId && entry.unit === unit) {
-            found = true;
-            return {
-              ...entry,
-              quantity: (entry.quantity || 0) + quantity,
-              normalized: (entry.normalized || 0) + normalized
-            };
-          }
-          return entry;
-        });
-        
-        if (!found) {
-          ingredients.push(ingredientEntry);
-        }
-        
-        await pantryRef.set({ ingredients }, { merge: true });
-        ingredientInput.value = '';
-        amountModal.style.display = 'none';
-        selectedItem = null;
-        selectedIngredientId = null;
+      if (singleUnit) {
+        // Use the single conversion unit
+        selectedUnit = conversionUnits[0];
+      } else if (unitSelect) {
+        // Use selected unit from dropdown
+        selectedUnit = unitSelect.value;
       } else {
-        alert('Please enter a valid quantity and select a unit.');
+        // Fallback
+        selectedUnit = 'unit';
       }
+      
+      const amount = parseFloat(amountInput.value) || 1;
+      
+      await addIngredientToPantry(itemName, ingredientId, selectedUnit, amount);
+      document.body.removeChild(modal);
     };
     
-    amountModal.style.display = 'block';
-    newAmountInput.focus();
+    // Assemble modal
+    modalContent.appendChild(closeBtn);
+    modalContent.appendChild(title);
+    
+    // Add unit selection if there are multiple units
+    if (!singleUnit && unitSelect) {
+      modalContent.appendChild(unitSelect.previousElementSibling); // Unit label
+      modalContent.appendChild(unitSelect);
+    }
+    
+    modalContent.appendChild(amountLabel);
+    modalContent.appendChild(amountInput);
+    modalContent.appendChild(addBtn);
+    modal.appendChild(modalContent);
+    
+    // Close on background click
+    modal.onclick = (e) => {
+      if (e.target === modal) document.body.removeChild(modal);
+    };
+    
+    // Close on Escape key
+    const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
+    document.body.appendChild(modal);
+    amountInput.focus();
   }
 
-  // Close modal
-  closeModal.onclick = () => {
-    amountModal.style.display = 'none';
-    selectedItem = null;
-    selectedIngredientId = null;
-  };
-
-
-  // Allow Enter key in modal
-  amountInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      // Find the current confirm button and click it
-      const currentConfirmBtn = document.getElementById('confirm-amount');
-      if (currentConfirmBtn) currentConfirmBtn.click();
+  // Add ingredient to pantry with selected unit and amount
+  async function addIngredientToPantry(itemName, ingredientId, unit, quantity) {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    // Find ingredient data for conversions
+    const ingredientData = itemsFromDB.find(ing => ing.name === itemName || ing.ingredientId === ingredientId);
+    const baseUnit = ingredientData ? ingredientData.baseUnit : 'unit';
+    
+    // Calculate normalized value (convert to base unit)
+    let normalized = quantity;
+    if (ingredientData && ingredientData.conversions && ingredientData.conversions[unit]) {
+      normalized = quantity * ingredientData.conversions[unit];
     }
-  });
+    
+    const pantryRef = db.collection('pantries').doc(user.uid);
+    const pantryDoc = await pantryRef.get();
+    let ingredients = (pantryDoc.exists && pantryDoc.data().ingredients) ? pantryDoc.data().ingredients : [];
+    
+    // Create new ingredient entry
+    const ingredientEntry = {
+      ingredientId: ingredientId,
+      quantity: quantity,
+      unit: unit,
+      normalized: normalized
+    };
+    
+    // Check if ingredient already exists (by ingredientId and unit)
+    let found = false;
+    ingredients = ingredients.map(entry => {
+      if (typeof entry === 'object' && entry.ingredientId === ingredientId && entry.unit === unit) {
+        found = true;
+        return {
+          ...entry,
+          quantity: (entry.quantity || 0) + quantity,
+          normalized: (entry.normalized || 0) + normalized
+        };
+      }
+      return entry;
+    });
+    
+    if (!found) {
+      ingredients.push(ingredientEntry);
+    }
+    
+    await pantryRef.set({ ingredients }, { merge: true });
+  }
 
   // Load pantry ingredients
   function loadPantry(uid) {
@@ -930,7 +1118,7 @@ ingredientInput.addEventListener('input', function() {
     const ingredientData = itemsFromDB.find(ing => ing.ingredientId === ingredientId);
     
     if (!ingredientData || !ingredientData.conversions) {
-      // Fallback to original display if no conversion data
+      // Fallback to simple display if no conversion data
       const parts = [];
       entries.forEach(entry => {
         const quantity = entry.quantity;
@@ -945,21 +1133,43 @@ ingredientInput.addEventListener('input', function() {
           } else if (unit === 'half_loaf') {
             unitText = 'half loaf';
           }
-          parts.push(`${quantity} ${unitText}`);
+          
+          // Format quantity (remove .0 for whole numbers)
+          const formattedQuantity = quantity % 1 === 0 ? quantity.toString() : quantity.toString();
+          parts.push(`${formattedQuantity} ${unitText}`);
         }
       });
       
       return parts.length > 0 ? `${parts.join(' and ')} of ${ingredientId}` : ingredientId;
     }
     
-    // Convert to most efficient units
+    // Check if there's only one conversion unit
+    const conversionUnits = Object.keys(ingredientData.conversions);
+    if (conversionUnits.length === 1) {
+      // For single unit ingredients, just show "# ingredient"
+      const unit = conversionUnits[0];
+      const unitValue = ingredientData.conversions[unit];
+      const quantity = totalNormalized / unitValue;
+      
+      if (quantity > 0) {
+        // Format quantity (remove .0 for whole numbers)
+        const formattedQuantity = quantity % 1 === 0 ? quantity.toString() : quantity.toFixed(1);
+        return `${formattedQuantity} ${ingredientId}`;
+      } else {
+        return ingredientId;
+      }
+    }
+    
+    // Convert to most efficient units (for multi-unit ingredients)
     let remainingNormalized = totalNormalized;
     const convertedAmounts = {};
     
     // Convert to largest units first
-    const conversionUnits = ['loaf', 'half_loaf', 'slice'];
+    const sortedUnits = conversionUnits.sort((a, b) => {
+      return (ingredientData.conversions[b] || 0) - (ingredientData.conversions[a] || 0);
+    });
     
-    conversionUnits.forEach(unit => {
+    sortedUnits.forEach(unit => {
       if (ingredientData.conversions[unit] && remainingNormalized >= ingredientData.conversions[unit]) {
         const unitValue = ingredientData.conversions[unit];
         const quantity = Math.floor(remainingNormalized / unitValue);
@@ -973,7 +1183,7 @@ ingredientInput.addEventListener('input', function() {
     // Handle any remaining fractional amounts
     if (remainingNormalized > 0) {
       // Find the smallest unit to represent remainder
-      const smallestUnit = conversionUnits[conversionUnits.length - 1]; // 'slice'
+      const smallestUnit = sortedUnits[sortedUnits.length - 1];
       if (ingredientData.conversions[smallestUnit]) {
         const fractionalQuantity = remainingNormalized / ingredientData.conversions[smallestUnit];
         if (fractionalQuantity > 0) {
@@ -988,7 +1198,7 @@ ingredientInput.addEventListener('input', function() {
     
     // Create display text
     const parts = [];
-    conversionUnits.forEach(unit => {
+    sortedUnits.forEach(unit => {
       if (convertedAmounts[unit] && convertedAmounts[unit] > 0) {
         const quantity = convertedAmounts[unit];
         let unitText = unit;
