@@ -21,6 +21,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cook Book</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .ingredient-input-container {
+      position: relative;
+    }
+    
+    #autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    
+    #autocomplete-list > div {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+    
+    #autocomplete-list > div:hover {
+      background-color: #f0f0f0;
+    }
+    
+    #autocomplete-list > div:last-child {
+      border-bottom: none;
+    }
+  </style>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/update.ico?alt=media&token=9157c232-0590-4be5-83da-cf47d3f8b6b2">
   <!-- Firebase CDN -->
@@ -168,7 +202,8 @@
        <div class="pantry-section">
          <h2>Your Pantry</h2>
          <div class="ingredient-input-container">
-           <input type="text" id="ingredient" placeholder="Add ingredient" autocomplete="off">
+           <input id="ingredient" type="text" placeholder="Add ingredient" autocomplete="off">
+           <div id="autocomplete-list"></div>
          </div>
          <ul id="ingredients" class="ingredients-list"></ul>
        </div>

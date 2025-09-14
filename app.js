@@ -111,32 +111,94 @@ function loadItemsRealtime() {
 loadItemsRealtime();
 
 // Autocomplete logic (uses Firestore ingredients)
-ingredientInput.addEventListener('input', function() {
-  const val = this.value.trim().toLowerCase();
-  autocompleteList.innerHTML = '';
-  autocompleteList.className = 'autocomplete-items'; // Ensure class is set
-  if (!val) return;
+console.log('Checking autocomplete elements...');
+console.log('ingredientInput:', ingredientInput);
+console.log('autocompleteList:', autocompleteList);
+
+if (ingredientInput && autocompleteList) {
+  console.log('✅ Setting up autocomplete...');
   
-  // Test data for demonstration
-  const testItems = [
-    { name: 'Tomato', ingredientId: 'test1' },
-    { name: 'Onion', ingredientId: 'test2' },
-    { name: 'Garlic', ingredientId: 'test3' },
-    { name: 'Basil', ingredientId: 'test4' },
-    { name: 'Cheese', ingredientId: 'test5' }
-  ];
-  
-  // Use test data if no database items, otherwise use database
-  const items = itemsFromDB.length > 0 ? itemsFromDB : testItems;
-  const matches = items.filter(item => typeof item.name === 'string' && item.name.toLowerCase().includes(val));
-  
-  matches.forEach(item => {
-    const div = document.createElement('div');
-    div.textContent = item.name;
-    div.onclick = () => selectAutocomplete(item.name, item.ingredientId);
-    autocompleteList.appendChild(div);
+  ingredientInput.addEventListener('input', function() {
+    console.log('🎯 Input event triggered, value:', this.value);
+    
+    const val = this.value.trim().toLowerCase();
+    
+    // Clear previous results
+    if (autocompleteList) {
+      autocompleteList.innerHTML = '';
+      autocompleteList.className = 'autocomplete-items';
+    }
+    
+    if (!val) {
+      if (autocompleteList) autocompleteList.style.display = 'none';
+      return;
+    }
+    
+    // Test data for demonstration
+    const testItems = [
+      { name: 'Tomato', ingredientId: 'Tomato' },
+      { name: 'Onion', ingredientId: 'Onion' },
+      { name: 'Garlic', ingredientId: 'Garlic' },
+      { name: 'Basil', ingredientId: 'Basil' },
+      { name: 'Cheese', ingredientId: 'Cheese' },
+      { name: 'Bread', ingredientId: 'Bread' }
+    ];
+    
+    // Use test data if no database items, otherwise use database
+    const items = itemsFromDB.length > 0 ? itemsFromDB : testItems;
+    const matches = items.filter(item => typeof item.name === 'string' && item.name.toLowerCase().includes(val));
+    
+    console.log('📋 Items to search:', items.length);
+    console.log('🔍 Matches found:', matches.length, matches);
+    
+    if (matches.length > 0 && autocompleteList) {
+      console.log('✅ Showing autocomplete with', matches.length, 'items');
+      
+      autocompleteList.style.display = 'block';
+      autocompleteList.style.position = 'absolute';
+      autocompleteList.style.backgroundColor = 'white';
+      autocompleteList.style.border = '1px solid #ccc';
+      autocompleteList.style.borderRadius = '4px';
+      autocompleteList.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+      autocompleteList.style.maxHeight = '200px';
+      autocompleteList.style.overflowY = 'auto';
+      autocompleteList.style.zIndex = '1000';
+      autocompleteList.style.width = ingredientInput.offsetWidth + 'px';
+      autocompleteList.style.top = (ingredientInput.offsetTop + ingredientInput.offsetHeight) + 'px';
+      autocompleteList.style.left = ingredientInput.offsetLeft + 'px';
+      
+      matches.forEach(item => {
+        const div = document.createElement('div');
+        div.textContent = item.name;
+        div.style.padding = '8px 12px';
+        div.style.cursor = 'pointer';
+        div.style.borderBottom = '1px solid #eee';
+        
+        div.onmouseover = () => {
+          div.style.backgroundColor = '#f0f0f0';
+        };
+        div.onmouseout = () => {
+          div.style.backgroundColor = 'white';
+        };
+        
+        div.onclick = () => selectAutocomplete(item.name, item.ingredientId);
+        autocompleteList.appendChild(div);
+      });
+      
+      console.log('📦 Autocomplete populated with', autocompleteList.children.length, 'items');
+    } else if (autocompleteList) {
+      console.log('❌ No matches or no autocompleteList');
+      autocompleteList.style.display = 'none';
+    }
   });
-});
+} else {
+  console.error('❌ Autocomplete elements not found!');
+  console.error('ingredientInput exists:', !!ingredientInput);
+  console.error('autocompleteList exists:', !!autocompleteList);
+  console.warn('Make sure your HTML has:');
+  console.warn('<input id="ingredient" type="text">');
+  console.warn('<div id="autocomplete-list"></div>');
+}
 
   // Auth state listener
   auth.onAuthStateChanged(user => {
@@ -154,8 +216,8 @@ ingredientInput.addEventListener('input', function() {
       swipeDiv.style.display = 'none';
       likedDiv.style.display = 'none';
       logoutBtn.style.display = 'none';
-      ingredientsList.innerHTML = '';
-      likedList.innerHTML = '';
+      if (ingredientsList) ingredientsList.innerHTML = '';
+      if (likedList) likedList.innerHTML = '';
     }
   });
 
@@ -234,7 +296,13 @@ ingredientInput.addEventListener('input', function() {
     db.collection('likedRecipes').doc(uid)
       .onSnapshot(doc => {
         const data = doc.data();
-        likedList.innerHTML = '';
+        if (likedList) {
+          likedList.innerHTML = '';
+        } else {
+          console.warn('likedList element not found');
+          return;
+        }
+        
         if (data && data.recipes && data.recipes.length) {
           // Group recipes by course
           const groups = { breakfast: [], lunch: [], dinner: [], other: [] };
@@ -786,13 +854,27 @@ ingredientInput.addEventListener('input', function() {
   };
 
   // Hide autocomplete on blur (with slight delay for click)
-  ingredientInput.addEventListener('blur', () => setTimeout(() => autocompleteList.innerHTML = '', 150));
+  if (ingredientInput && autocompleteList) {
+    ingredientInput.addEventListener('blur', () => setTimeout(() => {
+      if (autocompleteList) {
+        autocompleteList.innerHTML = '';
+        autocompleteList.style.display = 'none';
+      }
+    }, 150));
+  }
 
   async function selectAutocomplete(itemName, ingredientId) {
     selectedItem = itemName;
     selectedIngredientId = ingredientId;
-    ingredientInput.value = '';
-    autocompleteList.innerHTML = '';
+    
+    // Clear input and hide autocomplete immediately
+    if (ingredientInput) {
+      ingredientInput.value = '';
+    }
+    if (autocompleteList) {
+      autocompleteList.innerHTML = '';
+      autocompleteList.style.display = 'none';
+    }
     
     // Show unit/amount selection modal
     showIngredientModal(itemName, ingredientId);
@@ -1048,7 +1130,13 @@ ingredientInput.addEventListener('input', function() {
     db.collection('pantries').doc(uid)
       .onSnapshot(doc => {
         const data = doc.data();
-        ingredientsList.innerHTML = '';
+        if (ingredientsList) {
+          ingredientsList.innerHTML = '';
+        } else {
+          console.warn('ingredientsList element not found');
+          return;
+        }
+        
         if (data && data.ingredients) {
           // Group ingredients by ingredientId
           const groupedIngredients = {};
