@@ -377,6 +377,48 @@ if (ingredientInput && autocompleteList) {
             });
             likedList.appendChild(cardRow);
           };
+  // Check if user has enough of an ingredient in pantry
+  function checkPantryForIngredient(ingredientId, requiredAmount, requiredUnit) {
+    const user = auth.currentUser;
+    if (!user) return false;
+    
+    // Get current pantry data (we'll need to make this synchronous or cache it)
+    // For now, we'll use a cached version
+    return window.currentPantryIngredients ? 
+      hasEnoughIngredient(window.currentPantryIngredients, ingredientId, requiredAmount, requiredUnit) : 
+      false;
+  }
+  
+  // Helper function to check if pantry has enough of an ingredient
+  function hasEnoughIngredient(pantryIngredients, ingredientId, requiredAmount, requiredUnit) {
+    if (!pantryIngredients || !ingredientId) return false;
+    
+    // Find all pantry entries for this ingredient
+    const matchingEntries = pantryIngredients.filter(entry => {
+      if (typeof entry === 'object' && entry.ingredientId === ingredientId) {
+        return true;
+      }
+      return false;
+    });
+    
+    if (matchingEntries.length === 0) return false;
+    
+    // Calculate total normalized amount available
+    const totalAvailable = matchingEntries.reduce((sum, entry) => {
+      return sum + (entry.normalized || 0);
+    }, 0);
+    
+    // Convert required amount to normalized units
+    const ingredientData = itemsFromDB.find(ing => ing.ingredientId === ingredientId);
+    let requiredNormalized = parseFloat(requiredAmount) || 1;
+    
+    if (ingredientData && ingredientData.conversions && requiredUnit && ingredientData.conversions[requiredUnit]) {
+      requiredNormalized = requiredNormalized * ingredientData.conversions[requiredUnit];
+    }
+    
+    return totalAvailable >= requiredNormalized;
+  }
+
   // Show full recipe modal
   function showRecipeModal(recipe) {
     const modal = document.getElementById('recipe-modal');
@@ -405,32 +447,57 @@ if (ingredientInput && autocompleteList) {
         } else if (typeof ing === 'object' && ing !== null) {
           const amount = ing.amount ? ing.amount : '';
           const unit = ing.unit ? ing.unit : '';
-          const name = ing.name ? ing.name : '';
+          const id = ing.id ? ing.id : '';
+          
+          // Simple format: "amount unit id"
           let text = '';
-          if (amount && unit && name) text = `${amount} ${unit} of ${name}`;
-          else if (amount && name) text = `${amount} of ${name}`;
-          else if (name) text = name;
-          else text = Object.values(ing).join(' ');
-          html += `<li>${text}</li>`;
+          if (amount && unit && id) {
+            text = `${amount} ${unit} ${id}`;
+          } else if (amount && id) {
+            text = `${amount} ${id}`;
+          } else if (id) {
+            text = id;
+          } else {
+            text = Object.values(ing).join(' ');
+          }
+          
+          // Check if user has this ingredient in pantry
+          const hasIngredient = checkPantryForIngredient(id, amount, unit);
+          const statusIcon = hasIngredient ? '✅' : '❌';
+          const statusClass = hasIngredient ? 'ingredient-have' : 'ingredient-need';
+          
+          html += `<li class="ingredient-item ${statusClass}"><span class="ingredient-text">${text}</span><span class="ingredient-status">${statusIcon}</span></li>`;
         }
       });
       html += `</ul>`;
     }
     // Instructions section
-    if (recipe.recipe) {
+    if (recipe.steps) {
+      console.log('Recipe steps found:', recipe.steps);
+      console.log('Recipe steps type:', typeof recipe.steps);
+      
       let steps = [];
-      if (Array.isArray(recipe.recipe)) {
-        steps = recipe.recipe;
-      } else if (typeof recipe.recipe === 'string') {
-        steps = recipe.recipe.split(/\n|\r|\d+\./).map(s => s.trim()).filter(Boolean);
+      if (Array.isArray(recipe.steps)) {
+        steps = recipe.steps;
+        console.log('Steps is array, steps:', steps);
+      } else if (typeof recipe.steps === 'string') {
+        steps = recipe.steps.split(/\n|\r|\d+\./).map(s => s.trim()).filter(Boolean);
+        console.log('Steps is string, parsed steps:', steps);
       }
+      
+      console.log('Final steps to display:', steps);
+      
       if (steps.length) {
         html += `<div class='section-header'>Instructions</div><ul class='stepper'>`;
         steps.forEach((step, i) => {
           html += `<li><span class='step-circle'>${i+1}</span><span class='step-text'>${step}</span></li>`;
         });
         html += `</ul>`;
+      } else {
+        console.log('No steps found to display');
       }
+    } else {
+      console.log('No recipe.steps property found');
     }
     details.innerHTML = html;
     modal.style.display = 'flex';
@@ -722,106 +789,6 @@ if (ingredientInput && autocompleteList) {
       }
     };
   }
-      // --- Grocery List Logic ---
-      const groceryList = document.getElementById('grocery-list');
-      if (!groceryList) return;
-      // Aggregate all ingredients from all recipes in the meal plan
-      const ingredientMap = {};
-      Object.values(mealPlan).forEach(dayObj => {
-        Object.values(dayObj).forEach(recipe => {
-          if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
-            recipe.ingredients.forEach(ing => {
-              let key = '', amount = 1, unit = '', name = '', orig = '';
-              if (typeof ing === 'string') {
-                // Try to parse 'amount unit of name' or 'amount unit name'
-                const match = ing.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s*(?:of)?\s*(.+)$/);
-                if (match) {
-                  amount = parseFloat(match[1]);
-                  unit = match[2] ? match[2].trim() : '';
-                  name = match[3] ? match[3].trim().toLowerCase() : '';
-                  key = `${unit}||${name}`;
-                  orig = `${unit ? unit + ' ' : ''}${name}`;
-                } else {
-                  name = ing.trim().toLowerCase();
-                  key = `||${name}`;
-                  orig = name;
-                }
-              } else if (typeof ing === 'object' && ing !== null) {
-                amount = ing.amount ? parseFloat(ing.amount) : 1;
-                unit = ing.unit ? ing.unit.trim() : '';
-                name = ing.name ? ing.name.trim().toLowerCase() : '';
-                key = `${unit}||${name}`;
-                orig = `${unit ? unit + ' ' : ''}${name}`;
-              }
-              if (!name) return;
-              if (!ingredientMap[key]) ingredientMap[key] = { amount: 0, unit, name: orig };
-              ingredientMap[key].amount += isNaN(amount) ? 1 : amount;
-            });
-          }
-        });
-      });
-      // Render grocery list in real time as pantry changes
-      if (window._groceryPantryUnsub) window._groceryPantryUnsub();
-      window._groceryPantryUnsub = db.collection('pantries').doc(uid).onSnapshot(pantryDoc => {
-        let pantryIngredients = (pantryDoc.exists && pantryDoc.data().ingredients) ? pantryDoc.data().ingredients : [];
-        groceryList.innerHTML = '';
-        Object.values(ingredientMap).forEach(({ amount, unit, name }) => {
-          let cleanName = name;
-          // Remove unit from start of name if present (case-insensitive)
-          if (unit && name && name.toLowerCase().startsWith(unit.toLowerCase() + ' ')) {
-            cleanName = name.slice(unit.length).trim();
-          }
-          // Remove plural unit from start of name if present (e.g., 'slices' vs 'slice')
-          if (unit && name && name.toLowerCase().startsWith(unit.toLowerCase() + 's ')) {
-            cleanName = name.slice(unit.length + 1).trim();
-          }
-          // Remove 'of' from start if present
-          if (cleanName.toLowerCase().startsWith('of ')) {
-            cleanName = cleanName.slice(3).trim();
-          }
-          let amtStr = amount % 1 === 0 ? amount : amount.toFixed(2);
-          const entryName = `${amtStr}${unit ? ' ' + unit : ''} of ${cleanName}`;
-          const alreadyInPantry = pantryIngredients.some(entry => {
-            const match = entry.match(/^(.*) x (\d+)$/);
-            return match && match[1] === entryName;
-          });
-          if (!alreadyInPantry) {
-            const li = document.createElement('li');
-            
-            // Create text span
-            const textSpan = document.createElement('span');
-            textSpan.textContent = `${amtStr}${unit ? ' ' + unit : ''} of ${cleanName}`;
-            li.appendChild(textSpan);
-            
-            const haveBtn = document.createElement('button');
-            haveBtn.textContent = 'I have this';
-            haveBtn.onclick = async () => {
-              const user = auth.currentUser;
-              if (!user) return;
-              const pantryRef = db.collection('pantries').doc(user.uid);
-              const pantryDoc = await pantryRef.get();
-              let ingredients = (pantryDoc.exists && pantryDoc.data().ingredients) ? pantryDoc.data().ingredients : [];
-              // Try to find a matching entry
-              let found = false;
-              ingredients = ingredients.map(entry => {
-                const match = entry.match(/^(.*) x (\d+)$/);
-                if (match && match[1] === entryName) {
-                  found = true;
-                  const newAmount = parseInt(match[2], 10) + 1;
-                  return `${entryName} x ${newAmount}`;
-                }
-                return entry;
-              });
-              if (!found) {
-                ingredients.push(`${entryName} x 1`);
-              }
-              await pantryRef.set({ ingredients }, { merge: true });
-            };
-            li.appendChild(haveBtn);
-            groceryList.appendChild(li);
-          }
-        });
-      });
     });
   }
 
@@ -1077,6 +1044,31 @@ if (ingredientInput && autocompleteList) {
     amountInput.focus();
   }
 
+  // Helper function to normalize ingredient names for matching
+  function normalizeIngredientName(name) {
+    const normalizedName = name.trim();
+    
+    // Create a mapping for common ingredient name variations
+    const ingredientMap = {
+      'bread': 'Bread',
+      'burger buns': 'Burger Buns',
+      'eggs': 'Eggs',
+      'egg': 'Eggs',
+      'olive oil': 'Olive Oil', // Add this if you have it in Firestore
+      'avocado': 'Avocado',     // Add this if you have it in Firestore
+      // Add more mappings as needed
+    };
+    
+    // Check if we have a mapping for this ingredient
+    const mapped = ingredientMap[normalizedName.toLowerCase()];
+    if (mapped) {
+      return mapped;
+    }
+    
+    // If no mapping, capitalize first letter of each word
+    return normalizedName.replace(/\b\w/g, l => l.toUpperCase());
+  }
+
   // Add ingredient to pantry with selected unit and amount
   async function addIngredientToPantry(itemName, ingredientId, unit, quantity) {
     const user = auth.currentUser;
@@ -1130,6 +1122,10 @@ if (ingredientInput && autocompleteList) {
     db.collection('pantries').doc(uid)
       .onSnapshot(doc => {
         const data = doc.data();
+        
+        // Cache pantry data for ingredient checking
+        window.currentPantryIngredients = data && data.ingredients ? data.ingredients : [];
+        
         if (ingredientsList) {
           ingredientsList.innerHTML = '';
         } else {

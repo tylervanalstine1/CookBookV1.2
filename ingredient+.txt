@@ -1,0 +1,15 @@
+const newIngredients = {
+  baseUnit: "g",
+  conversions: {
+  
+
+  }
+};
+
+db.collection("ingredients").doc("All Purpose Flour").set(newIngredients)
+  .then(() => {
+    console.log("Item added.");
+  })
+  .catch(error => {
+    console.error("Error adding item: ", error);
+  });

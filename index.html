@@ -54,6 +54,40 @@
     #autocomplete-list > div:last-child {
       border-bottom: none;
     }
+    
+    /* Ingredient status styling */
+    .ingredient-item {
+      display: flex;
+      align-items: center;
+      padding: 0.8em 1em;
+      margin: 0.5em 0;
+      border-radius: 16px;
+      border: 2px solid;
+      font-weight: 500;
+    }
+    
+    .ingredient-have {
+      background-color: #2196f3;
+      border-color: #2196f3;
+      color: #ffffff;
+    }
+    
+    .ingredient-need {
+      background-color: #f5f5f5;
+      border-color: #f5f5f5;
+      color: #424242;
+    }
+    
+    .ingredient-status {
+      font-size: 1.2em;
+      margin-left: 0.8em;
+      display: flex;
+      align-items: center;
+    }
+    
+    .ingredient-text {
+      flex: 1;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/update.ico?alt=media&token=9157c232-0590-4be5-83da-cf47d3f8b6b2">
@@ -198,22 +232,12 @@
    <!-- Pantry Tab -->
    <div id="pantry" class="tab-content" style="display:none;">
      <div class="pantry-container">
-       <!-- Left Side - Pantry -->
-       <div class="pantry-section">
-         <h2>Your Pantry</h2>
-         <div class="ingredient-input-container">
-           <input id="ingredient" type="text" placeholder="Add ingredient" autocomplete="off">
-           <div id="autocomplete-list"></div>
-         </div>
-         <ul id="ingredients" class="ingredients-list"></ul>
+       <h2>Your Pantry</h2>
+       <div class="ingredient-input-container">
+         <input id="ingredient" type="text" placeholder="Add ingredient" autocomplete="off">
+         <div id="autocomplete-list"></div>
        </div>
-       
-       <!-- Right Side - Grocery List -->
-       <div class="grocery-section">
-         <h2>Grocery List</h2>
-         <p class="grocery-subtitle">Items needed from your meal plan</p>
-         <ul id="grocery-list" class="grocery-list"></ul>
-       </div>
+       <ul id="ingredients" class="ingredients-list"></ul>
      </div>
    </div>
 

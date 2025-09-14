@@ -1,0 +1,29 @@
+db.collection("recipes").doc("Pumpkin Pancakes").set({
+  title: "Pumpkin Pancakes",
+  serving: 6,
+  time: "30 minutes",
+  course: "Breakfast",
+  img: "https://firebasestorage.googleapis.com/v0/b/cookbook-cdf05.firebasestorage.app/o/pumpkin-pancakes-5.jpg?alt=media&token=58395a8b-9d3d-4423-9398-2f5073e796e1",
+  steps: [
+    "Place the flour, brown sugar, baking powder, baking soda, pumpkin pie spice and salt in a large bowl; stir to combine.",
+    "Add the buttermilk, pumpkin puree, egg, butter and vanilla extract to the bowl. Mix until just blended and a batter forms.",
+    "Heat a griddle over medium heat. Coat the griddle with cooking spray.",
+    "Place 1/4 cup scoops of batter onto the griddle 3 inches apart from each other.",
+    "Cook for 2-3 minutes per side or until pancakes are golden brown.",
+    "Serve, topped with maple syrup and whipped cream if desired."
+  ],
+  ingredients: [
+    { id: "All Purpose Flour", amount: 2, unit: "cups" },       
+    { id: "Brown Sugar", amount: 3, unit: "tablespoons" },        // pinch
+    { id: "Baking Powder", amount: 2, unit: "teaspoons" },      // pinch
+    { id: "Baking Soda", amount: 1, unit: "teaspoon" }, // drizzle
+    { id: "Pumpkin Pie Spice", amount: 1.5, unit: "teaspoons" },       // need to add Bread to ingredients collection
+    { id: "Salt", amount: 0.25, unit: "teaspoon" },
+    { id: "Buttermilk", amount: 2, unit: "cups" },
+    { id: "Pumpkin Puree", amount:1, unit:"cup" },
+    { id: "Egg", amount:1, unit:"egg"},
+    { id: "Butter", amount:2, unit:"tablespoons"},
+    { id: "Vanilla Extract", amount:0.5, unit:"teaspoons"},
+    { id: "Maple Syrup", amount:5, unit:"oz" }
+  ]
+});
