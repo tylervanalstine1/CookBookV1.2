@@ -110,7 +110,7 @@
   <!-- Tab Navigation -->
   <div id="tabs" style="display:none; margin-bottom:1em;">
   <button class="tab-btn" id="tab-liked">My Recipes</button>
-  <button class="tab-btn" id="tab-swipe">Recipe Swipe</button>
+  <button class="tab-btn" id="tab-recipes">Cook Book</button>
     <button class="tab-btn" id="tab-mealplan">Meal Plan</button>
   <button class="tab-btn" id="tab-pantry">Pantry</button>
   <button id="logout" style="display:none;">Sign Out</button>
@@ -260,5 +260,27 @@
     <h2>My Recipes</h2>
     <ul id="liked-list"></ul>
   </div>
+
+  <div id="cookbook" class="tab-content" style="display:none;">
+    <h2>Cook Book</h2>
+    <div style="padding-left:2.5em; margin-bottom:1.5em; display: flex; align-items: center; gap: 1.5em;">
+      <button id="open-recipe-swipe" style="font-size:1.1em;padding:0.7em 2em;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;box-shadow:0 2px 8px rgba(39,92,200,0.08);">Recipe Swipe</button>
+      <div style="position:relative; flex:1; max-width:350px;">
+        <input id="cookbook-search" type="text" placeholder="Search recipes..." style="width:100%;padding:0.7em 1em;border-radius:8px;border:1px solid #bbb;font-size:1em;">
+        <ul id="cookbook-search-list" style="position:absolute;top:110%;left:0;width:100%;background:#fff;z-index:10;list-style:none;margin:0;padding:0;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:0 0 8px 8px;display:none;"></ul>
+      </div>
+    </div>
+    <div id="cookbook-content" style="padding-left: 2.5em;"></div>
+  </div>
+</div>
+
+<!-- Recipe Modal -->
+<div id="recipe-modal" style="display:none;position:fixed;z-index:3000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:2em 2.5em 2em 2.5em;border-radius:18px;max-width:480px;width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.18);position:relative;">
+    <span id="close-recipe-modal" style="position:absolute;top:1em;right:1.2em;font-size:2em;cursor:pointer;color:#888;">&times;</span>
+    <img id="recipe-modal-img" src="" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-bottom:1em;display:none;">
+    <div id="recipe-modal-details"></div>
+  </div>
+</div>
 </body>
 </html>

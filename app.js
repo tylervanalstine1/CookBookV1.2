@@ -1,6 +1,51 @@
+  // Check if user has enough of an ingredient in pantry
+  function checkPantryForIngredient(ingredientId, requiredAmount, requiredUnit) {
+    const user = auth.currentUser;
+    if (!user) return false;
+    // Get current pantry data (we'll need to make this synchronous or cache it)
+    // For now, we'll use a cached version
+    return window.currentPantryIngredients ? 
+      hasEnoughIngredient(window.currentPantryIngredients, ingredientId, requiredAmount, requiredUnit) : 
+      false;
+  }
+
+  // Helper function to check if pantry has enough of an ingredient
+  function hasEnoughIngredient(pantryIngredients, ingredientId, requiredAmount, requiredUnit) {
+    if (!pantryIngredients || !ingredientId) return false;
+    // Find all pantry entries for this ingredient
+    const matchingEntries = pantryIngredients.filter(entry => {
+      if (typeof entry === 'object' && entry.ingredientId === ingredientId) {
+        return true;
+      }
+      return false;
+    });
+    if (matchingEntries.length === 0) return false;
+    // Calculate total normalized amount available
+    const totalAvailable = matchingEntries.reduce((sum, entry) => {
+      return sum + (entry.normalized || 0);
+    }, 0);
+    // Convert required amount to normalized units
+    const ingredientData = itemsFromDB.find(ing => ing.ingredientId === ingredientId);
+    let requiredNormalized = parseFloat(requiredAmount) || 1;
+    if (ingredientData && ingredientData.conversions && requiredUnit && ingredientData.conversions[requiredUnit]) {
+      requiredNormalized = requiredNormalized * ingredientData.conversions[requiredUnit];
+    }
+    return totalAvailable >= requiredNormalized;
+  }
 // Plain JS for Pantry App
 // All logic inside DOMContentLoaded
+
+// Firestore-backed data (define globally so all functions, including those outside DOMContentLoaded, can access)
+let recipesFromDB = [];
+let itemsFromDB = [];
+let recipeIndex = 0;
+let selectedItem = null;
+let selectedIngredientId = null;
+let mealPlan = {};
+let likedRecipesCache = [];
+
 document.addEventListener('DOMContentLoaded', () => {
+
   // Firebase references
   const auth = firebase.auth();
   const db = firebase.firestore();
@@ -31,15 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const likedList = document.getElementById('liked-list');
   const mealplanDiv = document.getElementById('mealplan');
   const mealplanTable = document.getElementById('mealplan-table');
-
-  // Firestore-backed data
-  let recipesFromDB = [];
-  let itemsFromDB = [];
-  let recipeIndex = 0;
-  let selectedItem = null;
-  let selectedIngredientId = null;
-  let mealPlan = {};
-  let likedRecipesCache = [];
 
   // Load all recipes from Firestore
   function loadRecipes(callback) {
@@ -235,6 +271,13 @@ if (ingredientInput && autocompleteList) {
       swipeDiv.style.display = 'block';
       loadRecipes(showRecipe);
     }
+    // Add event for Recipe Swipe button under Cook Book
+    const swipeBtn = document.getElementById('open-recipe-swipe');
+    if (swipeBtn) {
+      swipeBtn.onclick = () => {
+        showTab('swipe');
+      };
+    }
     if (tab === 'liked') {
       likedDiv.style.display = 'block';
       loadLikedRecipes(auth.currentUser.uid);
@@ -243,6 +286,237 @@ if (ingredientInput && autocompleteList) {
       mealplanDiv.style.display = 'block';
       loadMealPlan(auth.currentUser.uid);
       likedRecipesCache = [];
+    }
+    if (tab === 'recipes') {
+      const cookbookDiv = document.getElementById('cookbook');
+      cookbookDiv.style.display = 'block';
+      loadRecipes(showCookBook);
+    }
+  }
+
+  // Show full recipe modal
+  function showRecipeModal(recipe) {
+    const modal = document.getElementById('recipe-modal');
+    const img = document.getElementById('recipe-modal-img');
+    const details = document.getElementById('recipe-modal-details');
+    // Set image
+    if (recipe.img) {
+      img.src = recipe.img;
+      img.style.display = '';
+    } else {
+      img.style.display = 'none';
+    }
+
+    // Add+ button logic: show if not already in liked recipes
+    let showAddButton = true;
+    const user = auth.currentUser;
+    if (user && Array.isArray(window.likedRecipesCache)) {
+      // Check if recipe is already liked (by id or title)
+      showAddButton = !window.likedRecipesCache.some(r => (r.id && recipe.id && r.id === recipe.id) || (r.title && recipe.title && r.title === recipe.title));
+    }
+
+    // Build Add+ button HTML if needed
+    let addButtonHtml = '';
+    if (showAddButton && user) {
+      addButtonHtml = `<button id="add-to-liked-btn" style="display:block;margin:0.7em auto 0.5em auto;padding:0.4em 1.2em;background:#2563eb;color:#fff;border:none;border-radius:16px;font-weight:600;font-size:1em;box-shadow:0 1px 4px rgba(39,92,200,0.10);cursor:pointer;transition:background 0.18s;">Add +</button>`;
+    }
+  // Build details
+  let html = '';
+  // Insert Add+ button above the title if needed
+  html += addButtonHtml;
+  html += `<h2 style='margin-top:0;'>${recipe.title}</h2>`;
+    if (recipe.course) html += `<div><span style='font-weight:600;color:#888;'>Course:</span> ${recipe.course}</div>`;
+    if (recipe.time) html += `<div><span style='font-weight:600;color:#888;'>Time:</span> ${recipe.time}</div>`;
+    if (recipe.serving) html += `<div><span style='font-weight:600;color:#888;'>Servings:</span> ${recipe.serving}</div>`;
+    // Ingredients section
+    if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+      html += `<div class='section-header' style='margin-top:1.2em;'>Ingredients</div><ul class='ingredient-list'>`;
+      recipe.ingredients.forEach((ing, idx) => {
+        let text = '';
+        let id = '';
+        let amount = '';
+        let unit = '';
+        if (typeof ing === 'string') {
+          text = ing;
+          id = ing;
+        } else if (typeof ing === 'object' && ing !== null) {
+          amount = ing.amount ? ing.amount : '';
+          unit = ing.unit ? ing.unit : '';
+          id = ing.id ? ing.id : '';
+          if (amount && unit && id) {
+            text = `${amount} ${unit} ${id}`;
+          } else if (amount && id) {
+            text = `${amount} ${id}`;
+          } else if (id) {
+            text = id;
+          } else {
+            text = Object.values(ing).join(' ');
+          }
+        }
+        const hasIngredient = checkPantryForIngredient(id, amount, unit);
+        const statusIcon = hasIngredient ? '✅' : '❌';
+        const statusClass = hasIngredient ? 'ingredient-have' : 'ingredient-need';
+        // Add + button for adding to pantry
+        const addBtn = `<button class="add-ingredient-btn" data-ingredient-name="${encodeURIComponent(id)}" data-ingredient-id="${encodeURIComponent(id)}" style="margin-left:0.7em;padding:0.1em 0.7em;font-size:1em;border-radius:50%;border:none;background:#2563eb;color:#fff;cursor:pointer;vertical-align:middle;">+</button>`;
+        html += `<li class="ingredient-item ${statusClass}"><span class="ingredient-text">${text}</span><span class="ingredient-status">${statusIcon}</span>${addBtn}</li>`;
+      });
+      html += `</ul>`;
+    }
+    // Instructions section
+    if (recipe.steps) {
+      let steps = [];
+      if (Array.isArray(recipe.steps)) {
+        steps = recipe.steps;
+      } else if (typeof recipe.steps === 'string') {
+        steps = recipe.steps.split(/\n|\r|\d+\./).map(s => s.trim()).filter(Boolean);
+      }
+      if (steps.length) {
+        html += `<div class='section-header' style='margin-top:1.2em;'>Instructions</div><ul class='stepper'>`;
+        steps.forEach((step, i) => {
+          html += `<li><span class='step-circle'>${i+1}</span><span class='step-text'>${step}</span></li>`;
+        });
+        html += `</ul>`;
+      }
+    }
+    details.innerHTML = html;
+    // Add event listener for Add+ button if present
+    if (showAddButton && user) {
+      const addBtn = document.getElementById('add-to-liked-btn');
+      if (addBtn) {
+        addBtn.onclick = function() {
+          db.collection('likedRecipes').doc(user.uid).set({
+            recipes: firebase.firestore.FieldValue.arrayUnion(recipe)
+          }, { merge: true });
+          if (Array.isArray(window.likedRecipesCache)) {
+            window.likedRecipesCache.push(recipe);
+          }
+          addBtn.style.display = 'none';
+        };
+      }
+    }
+    // Add event listeners for ingredient + buttons
+    details.querySelectorAll('.add-ingredient-btn').forEach(btn => {
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        const name = decodeURIComponent(btn.getAttribute('data-ingredient-name'));
+        const id = decodeURIComponent(btn.getAttribute('data-ingredient-id'));
+        showIngredientModal(name, id);
+      };
+    });
+    modal.style.display = 'flex';
+  }
+
+  // Show all recipes sorted by course in Cook Book tab
+  function showCookBook() {
+    const cookbookContent = document.getElementById('cookbook-content');
+    if (!cookbookContent) return;
+    // --- Cook Book Search Bar Autocomplete ---
+    const searchInput = document.getElementById('cookbook-search');
+    const searchList = document.getElementById('cookbook-search-list');
+    if (searchInput && searchList) {
+      searchInput.value = '';
+      searchList.innerHTML = '';
+      searchList.style.display = 'none';
+      searchInput.oninput = function() {
+        const val = this.value.trim().toLowerCase();
+        searchList.innerHTML = '';
+        if (!val) { searchList.style.display = 'none'; return; }
+        const matches = recipesFromDB.filter(r => r.title && r.title.toLowerCase().includes(val));
+        if (!matches.length) { searchList.style.display = 'none'; return; }
+        matches.slice(0,8).forEach(recipe => {
+          const li = document.createElement('li');
+          li.textContent = recipe.title;
+          li.style.padding = '0.6em 1em';
+          li.style.cursor = 'pointer';
+          li.onmouseover = () => li.style.background = '#f0f4fa';
+          li.onmouseout = () => li.style.background = '#fff';
+          li.onclick = () => {
+            searchInput.value = recipe.title;
+            searchList.style.display = 'none';
+            showRecipeModal(recipe);
+          };
+          searchList.appendChild(li);
+        });
+        searchList.style.display = 'block';
+      };
+      // Hide list on blur
+      searchInput.onblur = () => setTimeout(() => { searchList.style.display = 'none'; }, 150);
+    }
+    // Use My Recipes card layout but show all recipes
+    cookbookContent.innerHTML = '';
+    if (recipesFromDB.length) {
+      // Group recipes by course for headers (optional, can remove if you want flat list)
+      const groups = { breakfast: [], lunch: [], dinner: [], other: [] };
+      recipesFromDB.forEach(recipe => {
+        const course = (recipe.course || '').toLowerCase();
+        if (course.includes('breakfast')) groups.breakfast.push(recipe);
+        else if (course.includes('lunch')) groups.lunch.push(recipe);
+        else if (course.includes('dinner')) groups.dinner.push(recipe);
+        else groups.other.push(recipe);
+      });
+      const renderGroup = (title, arr) => {
+        if (!arr.length) return;
+        const groupHeader = document.createElement('h3');
+        groupHeader.textContent = title;
+        groupHeader.style.margin = '1.5em 0 0.5em 0';
+        cookbookContent.appendChild(groupHeader);
+        // Card container (same as My Recipes)
+        const cardRow = document.createElement('div');
+        cardRow.style.display = 'flex';
+        cardRow.style.flexWrap = 'wrap';
+        cardRow.style.gap = '1.5em';
+        cardRow.style.marginBottom = '1.5em';
+        arr.forEach(recipe => {
+          const card = document.createElement('div');
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.alignItems = 'center';
+          card.style.background = '#fff';
+          card.style.borderRadius = '14px';
+          card.style.boxShadow = '0 2px 12px rgba(39,92,200,0.08)';
+          card.style.padding = '1em 1.2em 1.2em 1.2em';
+          card.style.width = '180px';
+          card.style.cursor = 'pointer';
+          card.style.position = 'relative';
+          card.style.transition = 'box-shadow 0.18s';
+          card.onmouseover = () => card.style.boxShadow = '0 4px 18px rgba(39,92,200,0.16)';
+          card.onmouseout = () => card.style.boxShadow = '0 2px 12px rgba(39,92,200,0.08)';
+          // Image
+          const img = document.createElement('img');
+          img.src = recipe.img;
+          img.style.width = '150px';
+          img.style.height = '110px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '10px';
+          img.style.marginBottom = '0.7em';
+          card.appendChild(img);
+          // Title
+          const titleSpan = document.createElement('span');
+          titleSpan.textContent = recipe.title;
+          titleSpan.style.fontSize = '1.08em';
+          titleSpan.style.fontWeight = '600';
+          titleSpan.style.textAlign = 'center';
+          titleSpan.style.marginBottom = '0.5em';
+          titleSpan.style.color = '#2563eb';
+          card.appendChild(titleSpan);
+          // Modal on card click (no remove button)
+          card.onclick = () => showRecipeModal(recipe);
+          cardRow.appendChild(card);
+        });
+        cookbookContent.appendChild(cardRow);
+      };
+      renderGroup('Breakfast', groups.breakfast);
+      renderGroup('Lunch', groups.lunch);
+      renderGroup('Dinner', groups.dinner);
+      renderGroup('Other', groups.other);
+    } else {
+      // No recipes: show message
+      const msg = document.createElement('div');
+      msg.textContent = 'No recipes found.';
+      msg.style.color = '#888';
+      msg.style.fontSize = '1.2em';
+      msg.style.margin = '2em 0 0 2em';
+      cookbookContent.appendChild(msg);
     }
   }
 
@@ -433,24 +707,25 @@ if (ingredientInput && autocompleteList) {
     }
     // Build details
     let html = '';
-    // Image is above title now
     html += `<h2 style='margin-top:0;'>${recipe.title}</h2>`;
     if (recipe.course) html += `<div><span style='font-weight:600;color:#888;'>Course:</span> ${recipe.course}</div>`;
     if (recipe.time) html += `<div><span style='font-weight:600;color:#888;'>Time:</span> ${recipe.time}</div>`;
     if (recipe.serving) html += `<div><span style='font-weight:600;color:#888;'>Servings:</span> ${recipe.serving}</div>`;
     // Ingredients section
     if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
-      html += `<div class='section-header'>Ingredients</div><ul class='ingredient-list'>`;
-      recipe.ingredients.forEach(ing => {
+      html += `<div class='section-header' style='margin-top:1.2em;'>Ingredients</div><ul class='ingredient-list'>`;
+      recipe.ingredients.forEach((ing, idx) => {
+        let text = '';
+        let id = '';
+        let amount = '';
+        let unit = '';
         if (typeof ing === 'string') {
-          html += `<li>${ing}</li>`;
+          text = ing;
+          id = ing;
         } else if (typeof ing === 'object' && ing !== null) {
-          const amount = ing.amount ? ing.amount : '';
-          const unit = ing.unit ? ing.unit : '';
-          const id = ing.id ? ing.id : '';
-          
-          // Simple format: "amount unit id"
-          let text = '';
+          amount = ing.amount ? ing.amount : '';
+          unit = ing.unit ? ing.unit : '';
+          id = ing.id ? ing.id : '';
           if (amount && unit && id) {
             text = `${amount} ${unit} ${id}`;
           } else if (amount && id) {
@@ -460,44 +735,45 @@ if (ingredientInput && autocompleteList) {
           } else {
             text = Object.values(ing).join(' ');
           }
-          
-          // Check if user has this ingredient in pantry
-          const hasIngredient = checkPantryForIngredient(id, amount, unit);
-          const statusIcon = hasIngredient ? '✅' : '❌';
-          const statusClass = hasIngredient ? 'ingredient-have' : 'ingredient-need';
-          
-          html += `<li class="ingredient-item ${statusClass}"><span class="ingredient-text">${text}</span><span class="ingredient-status">${statusIcon}</span></li>`;
         }
+        const hasIngredient = checkPantryForIngredient(id, amount, unit);
+        const statusIcon = hasIngredient ? '✅' : '❌';
+        const statusClass = hasIngredient ? 'ingredient-have' : 'ingredient-need';
+        // Add + button for adding to pantry
+        const addBtn = `<button class="add-ingredient-btn" data-ingredient-name="${encodeURIComponent(id)}" data-ingredient-id="${encodeURIComponent(id)}" style="margin-left:0.7em;padding:0.1em 0.7em;font-size:1em;border-radius:50%;border:none;background:#2563eb;color:#fff;cursor:pointer;vertical-align:middle;">+</button>`;
+        html += `<li class="ingredient-item ${statusClass}"><span class="ingredient-text">${text}</span><span class="ingredient-status">${statusIcon}</span>${addBtn}</li>`;
       });
       html += `</ul>`;
     }
+    // Add event listeners for ingredient + buttons
+    setTimeout(() => {
+      const details = document.getElementById('recipe-modal-details');
+      if (details) {
+        details.querySelectorAll('.add-ingredient-btn').forEach(btn => {
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            const name = decodeURIComponent(btn.getAttribute('data-ingredient-name'));
+            const id = decodeURIComponent(btn.getAttribute('data-ingredient-id'));
+            showIngredientModal(name, id);
+          };
+        });
+      }
+    }, 0);
     // Instructions section
     if (recipe.steps) {
-      console.log('Recipe steps found:', recipe.steps);
-      console.log('Recipe steps type:', typeof recipe.steps);
-      
       let steps = [];
       if (Array.isArray(recipe.steps)) {
         steps = recipe.steps;
-        console.log('Steps is array, steps:', steps);
       } else if (typeof recipe.steps === 'string') {
         steps = recipe.steps.split(/\n|\r|\d+\./).map(s => s.trim()).filter(Boolean);
-        console.log('Steps is string, parsed steps:', steps);
       }
-      
-      console.log('Final steps to display:', steps);
-      
       if (steps.length) {
-        html += `<div class='section-header'>Instructions</div><ul class='stepper'>`;
+        html += `<div class='section-header' style='margin-top:1.2em;'>Instructions</div><ul class='stepper'>`;
         steps.forEach((step, i) => {
           html += `<li><span class='step-circle'>${i+1}</span><span class='step-text'>${step}</span></li>`;
         });
         html += `</ul>`;
-      } else {
-        console.log('No steps found to display');
       }
-    } else {
-      console.log('No recipe.steps property found');
     }
     details.innerHTML = html;
     modal.style.display = 'flex';
